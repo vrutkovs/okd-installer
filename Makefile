@@ -62,7 +62,7 @@ destroy: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug
+	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir ${DIR}
 	make cleanup
 	rm -rf terraform.tfstate terraform.tfvars tls/ metadata.json
 
