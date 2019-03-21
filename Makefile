@@ -47,7 +47,7 @@ cleanup: ## Remove remaining installer bits
 	rm -rvf install-config.yaml install-config.copy.yaml .openshift_install_state.json .openshift_install.log *.ign || true
 
 pull-installer: ## Pull fresh installer image
-	#${PODMAN} pull ${INSTALLER_IMAGE}
+	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} --rm -ti ${INSTALLER_IMAGE} version
