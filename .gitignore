@@ -1,0 +1,5 @@
+pull_secret.json
+.aws/
+ssh-publickey
+output/
+install-config.yaml
