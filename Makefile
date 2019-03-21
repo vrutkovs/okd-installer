@@ -1,7 +1,8 @@
 BASE_DOMAIN=devcluster.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
-PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/output:/output${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
+DIR=output
+PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
 ADDITIONAL_PARAMS=-e INSTANCE_PREFIX="${USERNAME}" -e OPTS="-vvv -e openshift_install_config_path=/tmp/install-config.ansible.yaml"
@@ -51,11 +52,11 @@ pull-installer: ## Pull fresh installer image
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} --rm -ti ${INSTALLER_IMAGE} version
 	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
-	  -m template -a "src=install-config.yaml.j2 dest=output/install-config.yaml"
+	  -m template -a "src=install-config.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /output
+	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /${DIR}
 
 destroy: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
