@@ -5,6 +5,7 @@ DIR=output
 PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
+CLI_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:cli
 ADDITIONAL_PARAMS=-e INSTANCE_PREFIX="${USERNAME}" -e OPTS="-vvv -e openshift_install_config_path=/tmp/install-config.ansible.yaml"
 PYTHON=/usr/bin/python3
 OFFICIAL_RELEASE=
@@ -50,7 +51,7 @@ pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
-	${PODMAN_RUN} --rm -ti ${INSTALLER_IMAGE} version
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
 	  -m template -a "src=install-config.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
@@ -65,6 +66,14 @@ destroy: ## Destroy AWS cluster
 	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir ${DIR}
 	make cleanup
 	rm -rf terraform.tfstate terraform.tfvars tls/ metadata.json
+
+update-cli: ## Update CLI image
+	${PODMAN} pull ${CLI_IMAGE}
+	${PODMAN_RUN} \
+	  -v ~/.local/bin:/host/bin \
+	  --entrypoint=sh \
+	  -ti ${CLI_IMAGE} \
+	  -c "cp /usr/bin/oc /host/bin/oc"
 
 pull-ansible-image: ## Pull latest openshift-ansible container
 	${PODMAN} pull ${ANSIBLE_IMAGE}
