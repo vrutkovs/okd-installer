@@ -66,10 +66,6 @@ destroy: ## Destroy AWS cluster
 	make cleanup
 	rm -rf terraform.tfstate terraform.tfvars tls/ metadata.json
 
-shell: ## Open a shell in openshift-ansible container
-	ADDITIONAL_PARAMS+=--entrypoint=/bin/sh
-	make provision
-
 pull-ansible-image: ## Pull latest openshift-ansible container
 	${PODMAN} pull ${ANSIBLE_IMAGE}
 
