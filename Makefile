@@ -6,7 +6,9 @@ PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
 CLI_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:cli
-ADDITIONAL_PARAMS=-e INSTANCE_PREFIX="${USERNAME}" -e OPTS="-vvv -e openshift_install_config_path=/tmp/install-config.ansible.yaml"
+ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
+					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
+					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
 PYTHON=/usr/bin/python3
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
@@ -79,14 +81,32 @@ pull-ansible-image: ## Pull latest openshift-ansible container
 	${PODMAN} pull ${ANSIBLE_IMAGE}
 
 scaleup: check ## Scaleup AWS workers
+ifndef ANSIBLE_REPO
+	$(error Location of the ansible repo is not set)
+endif
+	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/root/usr/local/bin:/usr/local/bin${MOUNT_FLAGS} \
-	  -v $(shell pwd)/injected:/usr/share/ansible/openshift-ansible/inventory/dynamic/injected${MOUNT_FLAGS} \
-	  -v ~/.ssh:/usr/share/ansible/openshift-ansible/.ssh \
-	  -v $(shell pwd)/auth:/auth${MOUNT_FLAGS} \
+	  -v $(shell pwd)/${DIR}:/cluster \
+	  -v $(shell pwd)/pull_secret.json:/cluster/pull_secret.json \
+	  -v /tmp/ansible:/opt/app-root/src/ \
 	  ${ADDITIONAL_PARAMS} \
-	  -ti ${ANSIBLE_IMAGE}
+	  -ti ${ANSIBLE_IMAGE} 
+
+scaleup-shell: check ## Run shell in scaleup image
+	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
+	${PODMAN_RUN} \
+	  ${ANSIBLE_MOUNT_OPTS} \
+	  -v $(shell pwd)/${DIR}:/cluster \
+	  -v $(shell pwd)/pull_secret.json:/cluster/pull_secret.json \
+	  -v /tmp/ansible:/opt/app-root/src/ \
+	  ${ADDITIONAL_PARAMS} \
+	  --entrypoint=sh \
+	  -ti ${ANSIBLE_IMAGE} 
+
+cleanup-centos-machines-in-scaleup: ## DEBUG - remove stray centos machinesets
+	oc --config ${DIR}/auth/kubeconfig -n openshift-machine-api get machinesets -o name | grep centos \
+	| xargs -n1 oc --config ${DIR}/auth/kubeconfig -n openshift-machine-api delete
 
 pull-tests: ## Pull test image
 	${PODMAN} pull registry.svc.ci.openshift.org/openshift/origin-v4.0:tests
