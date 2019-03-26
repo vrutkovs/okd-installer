@@ -47,7 +47,7 @@ ifeq (,$(wildcard ./.aws/credentials))
 endif
 
 cleanup: ## Remove remaining installer bits
-	rm -rvf install-config.yaml install-config.copy.yaml .openshift_install_state.json .openshift_install.log *.ign || true
+	sudo rm -rf ${DIR}/* || true
 
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
@@ -67,7 +67,6 @@ destroy: ## Destroy AWS cluster
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir /${DIR}
 	make cleanup
-	rm -rf terraform.tfstate terraform.tfvars tls/ metadata.json
 
 update-cli: ## Update CLI image
 	${PODMAN} pull ${CLI_IMAGE}
