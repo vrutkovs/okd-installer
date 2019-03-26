@@ -88,8 +88,8 @@ endif
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 	  -v $(shell pwd)/${DIR}:/cluster \
-	  -v $(shell pwd)/pull_secret.json:/cluster/pull_secret.json \
-	  -v /tmp/ansible:/opt/app-root/src/ \
+	  -v $(shell pwd)/pull_secret.json:/opt/app-root/src/pull-secret.txt \
+	  -v /tmp/ansible:/opt/app-root/src/.ansible \
 	  ${ADDITIONAL_PARAMS} \
 	  -ti ${ANSIBLE_IMAGE} 
 
