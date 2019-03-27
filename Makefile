@@ -3,8 +3,11 @@ MOUNT_FLAGS=
 PODMAN=podman
 DIR=output
 PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
+PODMAN_TF=${PODMAN} run --privileged --rm -v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u) --workdir=/${TF_DIR}
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
+TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
+TF_DIR=tf
 CLI_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:cli
 ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
@@ -50,16 +53,30 @@ cleanup: ## Remove remaining installer bits
 	sudo rm -rf ${DIR}/* || true
 
 pull-installer: ## Pull fresh installer image
-	${PODMAN} pull ${INSTALLER_IMAGE}
+	#${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
-	  -m template -a "src=install-config.yaml.j2 dest=${DIR}/install-config.yaml"
+	  -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /${DIR}
+
+vmware: check pull-installer ## Create AWS cluster
+	# ${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	# env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
+	#   -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
+	# ${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	#   -ti ${INSTALLER_IMAGE} create ignition-configs --log-level debug --dir /${DIR}
+	#env DIR=${DIR} TF_DIR=${TF_DIR} sh 01_generate_tfvars.sh
+	${PODMAN_TF} -ti ${TERRAFORM_IMAGE} init
+	${PODMAN_TF} \
+		-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+		-e AWS_DEFAULT_REGION=us-east-1 \
+		-ti ${TERRAFORM_IMAGE} apply -auto-approve
 
 destroy: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \

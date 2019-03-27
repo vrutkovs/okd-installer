@@ -3,3 +3,5 @@ pull_secret.json
 ssh-publickey
 output/
 install-config.yaml
+terraform.tfvars.template
+tf/
