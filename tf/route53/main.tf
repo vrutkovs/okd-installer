@@ -78,6 +78,8 @@ resource "aws_route53_record" "compute_nodes" {
 }
 
 resource "aws_route53_record" "ingress" {
+  count = "${var.compute_instance_count == "0" ? "0" : "1"}"
+
   type           = "A"
   ttl            = "60"
   zone_id        = "${aws_route53_zone.cluster.zone_id}"
