@@ -93,7 +93,7 @@ vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -ti ${INSTALLER_IMAGE} upi finish --log-level debug --dir /${DIR}
 
-destroy: ## Destroy AWS cluster
+destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
