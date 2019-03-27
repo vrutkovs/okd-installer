@@ -103,7 +103,7 @@ destroy-vmware: ## Destroy VMWare cluster
 	 	-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	 	-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	 	-e AWS_DEFAULT_REGION=us-east-1 \
-	 	-ti ${TERRAFORM_IMAGE} destroy -auto-approve
+	 	-ti ${TERRAFORM_IMAGE} destroy -auto-approve -var 'step=1'
 
 destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
