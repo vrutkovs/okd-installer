@@ -93,6 +93,13 @@ vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -ti ${INSTALLER_IMAGE} upi finish --log-level debug --dir /${DIR}
 
+destroy-vmware: ## Destroy VMWare cluster
+	${PODMAN_TF} \
+	 	-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	 	-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	 	-e AWS_DEFAULT_REGION=us-east-1 \
+	 	-ti ${TERRAFORM_IMAGE} destroy -auto-approve
+
 destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
