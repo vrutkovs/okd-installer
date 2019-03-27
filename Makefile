@@ -54,7 +54,7 @@ cleanup: ## Remove remaining installer bits
 	mkdir ${DIR}
 
 pull-installer: ## Pull fresh installer image
-	#${PODMAN} pull ${INSTALLER_IMAGE}
+	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
