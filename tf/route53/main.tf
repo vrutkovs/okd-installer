@@ -76,3 +76,11 @@ resource "aws_route53_record" "compute_nodes" {
   name    = "compute-${count.index}.${var.cluster_domain}"
   records = ["${local.compute_ips[count.index]}"]
 }
+
+resource "aws_route53_record" "ingress" {
+  type           = "A"
+  ttl            = "60"
+  zone_id        = "${aws_route53_zone.cluster.zone_id}"
+  name           = "*.apps.${var.cluster_domain}"
+  records        = ["${var.compute_ips}"]
+}
