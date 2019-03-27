@@ -50,7 +50,8 @@ ifeq (,$(wildcard ./.aws/credentials))
 endif
 
 cleanup: ## Remove remaining installer bits
-	sudo rm -rf ${DIR}/* || true
+	sudo rm -rf ${DIR} || true
+	mkdir ${DIR}
 
 pull-installer: ## Pull fresh installer image
 	#${PODMAN} pull ${INSTALLER_IMAGE}
@@ -65,18 +66,32 @@ aws: check pull-installer ## Create AWS cluster
 	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /${DIR}
 
 vmware: check pull-installer ## Create AWS cluster
-	# ${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	# env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
-	#   -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
-	# ${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	#   -ti ${INSTALLER_IMAGE} create ignition-configs --log-level debug --dir /${DIR}
-	#env DIR=${DIR} TF_DIR=${TF_DIR} sh 01_generate_tfvars.sh
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
+	  -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -ti ${INSTALLER_IMAGE} create ignition-configs --log-level debug --dir /${DIR}
+	env DIR=${DIR} TF_DIR=${TF_DIR} sh 01_generate_tfvars.sh
 	${PODMAN_TF} -ti ${TERRAFORM_IMAGE} init
 	${PODMAN_TF} \
-		-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-		-e AWS_DEFAULT_REGION=us-east-1 \
-		-ti ${TERRAFORM_IMAGE} apply -auto-approve
+	 	-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	 	-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	 	-e AWS_DEFAULT_REGION=us-east-1 \
+	 	-ti ${TERRAFORM_IMAGE} apply -auto-approve -var 'step=1'
+	${PODMAN_TF} \
+	 	-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	 	-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	 	-e AWS_DEFAULT_REGION=us-east-1 \
+	 	-ti ${TERRAFORM_IMAGE} apply -auto-approve -var 'step=2'
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -ti ${INSTALLER_IMAGE} upi bootstrap-complete --log-level debug --dir /${DIR}
+	${PODMAN_TF} \
+	 	-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	 	-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	 	-e AWS_DEFAULT_REGION=us-east-1 \
+	 	-ti ${TERRAFORM_IMAGE} apply -auto-approve -var 'step=3'
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -ti ${INSTALLER_IMAGE} upi finish --log-level debug --dir /${DIR}
 
 destroy: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
