@@ -1,3 +1,4 @@
+.EXPORT_ALL_VARIABLES:
 BASE_DOMAIN=devcluster.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
@@ -67,8 +68,7 @@ pull-installer: ## Pull fresh installer image
 
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env BASE_DOMAIN=${BASE_DOMAIN} ${ANSIBLE} \
-	  -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
+	${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
@@ -76,11 +76,9 @@ aws: check pull-installer ## Create AWS cluster
 
 vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_INSTALLER} version
-	env BASE_DOMAIN=${BASE_DOMAIN} ${ANSIBLE} \
-	  -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
+	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
-	env BASE_DOMAIN=${BASE_DOMAIN} DIR=${DIR} TF_DIR=${TF_DIR} ${ANSIBLE} \
-	  -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
+	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
 	${PODMAN_TF} apply -auto-approve -var 'step=1'
 	${PODMAN_TF} apply -auto-approve -var 'step=2'
