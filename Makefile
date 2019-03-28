@@ -21,9 +21,10 @@ ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
 					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
 PYTHON=/usr/bin/python3
+ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}"
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.0.0-0.7
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.0.0-0.8
 endif
 LATEST_RELEASE=
 ifneq ("$(LATEST_RELEASE)","")
@@ -66,7 +67,7 @@ pull-installer: ## Pull fresh installer image
 
 aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
+	env BASE_DOMAIN=${BASE_DOMAIN} ${ANSIBLE} \
 	  -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
@@ -75,10 +76,11 @@ aws: check pull-installer ## Create AWS cluster
 
 vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_INSTALLER} version
-	env BASE_DOMAIN=${BASE_DOMAIN} ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" \
+	env BASE_DOMAIN=${BASE_DOMAIN} ${ANSIBLE} \
 	  -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
-	env DIR=${DIR} TF_DIR=${TF_DIR} sh 01_generate_tfvars.sh
+	env BASE_DOMAIN=${BASE_DOMAIN} DIR=${DIR} TF_DIR=${TF_DIR} ${ANSIBLE} \
+	  -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
 	${PODMAN_TF} apply -auto-approve -var 'step=1'
 	${PODMAN_TF} apply -auto-approve -var 'step=2'
