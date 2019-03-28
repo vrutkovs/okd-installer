@@ -1,4 +1,5 @@
 .EXPORT_ALL_VARIABLES:
+.DEFAULT_GOAL := help
 BASE_DOMAIN=devcluster.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
