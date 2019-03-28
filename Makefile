@@ -22,7 +22,7 @@ ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
 					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
 PYTHON=/usr/bin/python3
-ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}"
+ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
 	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.0.0-0.8
