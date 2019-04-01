@@ -6,13 +6,13 @@ PODMAN=podman
 DIR=output
 PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
 PODMAN_TF=${PODMAN} run --privileged --rm \
-					--user $(shell id -u):$(shell id -u) \
-					--workdir=/${TF_DIR} \
-					-v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} \
-					-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-					-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-					-e AWS_DEFAULT_REGION=us-east-1 \
-					-ti ${TERRAFORM_IMAGE}
+			--user $(shell id -u):$(shell id -u) \
+			--workdir=/${TF_DIR} \
+			-v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} \
+			-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+			-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+			-e AWS_DEFAULT_REGION=us-east-1 \
+			-ti ${TERRAFORM_IMAGE}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
@@ -87,7 +87,7 @@ vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_TF} apply -auto-approve -var 'step=3'
 	${PODMAN_INSTALLER} upi finish --log-level debug --dir /${DIR}
 
-patch: ## Various configs
+patch-vmware: ## Various configs
 	oc patch ingresses.config.openshift.io cluster --type=merge --patch '{"spec": {"highAvailability": {"type": "UserDefined"}}}'
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
