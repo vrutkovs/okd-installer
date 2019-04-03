@@ -75,6 +75,12 @@ aws: check pull-installer ## Create AWS cluster
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /${DIR}
 
+watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
+	curl -Lvs --insecure \
+	  --cert ${DIR}/tls/journal-gatewayd.crt \
+	  --key ${DIR}/tls/journal-gatewayd.key \
+	  "https://api.${USERNAME}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
+
 vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_INSTALLER} version
 	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
