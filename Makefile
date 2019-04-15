@@ -81,7 +81,7 @@ watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
 	  --key ${DIR}/tls/journal-gatewayd.key \
 	  "https://api.${USERNAME}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
 
-vsphere: check pull-installer ## Create AWS cluster
+vsphere: check pull-installer ## Create vsphere cluster
 	${PODMAN_INSTALLER} version
 	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
@@ -90,13 +90,11 @@ vsphere: check pull-installer ## Create AWS cluster
 	${PODMAN_TF} apply -auto-approve
 	${PODMAN_INSTALLER} wait-for bootstrap-complete --log-level debug --dir /${DIR}
 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
-  oc --config=${DIR}/auth/kubeconfig get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=${DIR}/auth/kubeconfig adm certificate approve
-	while true; do oc --config=${DIR}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
-	oc --config=${DIR}/auth/kubeconfig patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"filesystem":{"volumeSource": {"emptyDir":{}}}}}}'
 	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /${DIR}
 
 patch-vsphere: ## Various configs
-	oc patch ingresses.config.openshift.io cluster --type=merge --patch '{"spec": {"highAvailability": {"type": "UserDefined"}}}'
+	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
+	while true; do oc --config=${DIR}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
 destroy-vsphere: ## Destroy vsphere cluster
