@@ -14,12 +14,6 @@ base_domain = "devcluster.openshift.com"
 // Name of the vSphere server. The dev cluster is on "vcsa.vmware.devcluster.openshift.com".
 vsphere_server = "vcsa.vmware.devcluster.openshift.com"
 
-// User on the vSphere server.
-vsphere_user = "vrutkovs@e2e.local"
-
-// Password of the user on the vSphere server.
-vsphere_password = "8Xx#61iCxRv!"
-
 // Name of the vSphere cluster. The dev cluster is "devel".
 vsphere_cluster = "devel"
 
@@ -31,6 +25,10 @@ vsphere_datastore = "nvme-ds1"
 
 // Name of the VM template to clone to create VMs for the cluster. The dev cluster has a template named "rhcos-latest".
 vm_template = "rhcos-latest"
+
+machine_cidr = "139.178.73.0/26"
+
+ipam = "139.178.89.254"
 
 // URL of the bootstrap ignition. This needs to be publicly accessible so that the bootstrap machine can pull the ignition.
 bootstrap_ignition_url = "{{ lookup('pipe', "cat " + lookup('env', "DIR") + "/bootstrap.ign | curl -F 'sprunge=<-' http://sprunge.us") }}"

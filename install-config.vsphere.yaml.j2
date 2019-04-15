@@ -6,7 +6,12 @@ metadata:
 networking:
   machineCIDR: "139.178.89.192/26"
 platform:
-  vsphere: {}
+  vsphere:
+    vCenter: vcsa.vmware.devcluster.openshift.com
+    username: {{ lookup('env', "VSPHERE_USER") }}
+    password: {{ lookup('env', "VSPHERE_PASSWORD") }}
+    datacenter: dc1
+    defaultDatastore: nvme-ds1
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |

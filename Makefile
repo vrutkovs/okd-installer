@@ -87,20 +87,20 @@ vmware: check pull-installer ## Create AWS cluster
 	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
-	${PODMAN_TF} apply -auto-approve -var 'step=1'
-	${PODMAN_TF} apply -auto-approve -var 'step=2'
-	${PODMAN_INSTALLER} upi bootstrap-complete --log-level debug --dir /${DIR}
-	${PODMAN_TF} apply -auto-approve -var 'step=3'
-	${PODMAN_INSTALLER} upi finish --log-level debug --dir /${DIR}
+	${PODMAN_TF} apply -auto-approve
+	${PODMAN_INSTALLER} wait-for bootstrap-complete --log-level debug --dir /${DIR}
+	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
+  oc --config=${DIR}/auth/kubeconfig get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=${DIR}/auth/kubeconfig adm certificate approve
+	while true; do oc --config=${DIR}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
+	oc --config=${DIR}/auth/kubeconfig patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"filesystem":{"volumeSource": {"emptyDir":{}}}}}}'
+	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /${DIR}
 
 patch-vmware: ## Various configs
 	oc patch ingresses.config.openshift.io cluster --type=merge --patch '{"spec": {"highAvailability": {"type": "UserDefined"}}}'
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
 destroy-vmware: ## Destroy VMWare cluster
-	${PODMAN_TF} destroy -auto-approve -var 'step=3'
-	${PODMAN_TF} destroy -auto-approve -var 'step=2'
-	${PODMAN_TF} destroy -auto-approve -var 'step=1'
+	${PODMAN_TF} destroy -auto-approve
 	make cleanup
 	git clean tf/ -fx
 
@@ -133,7 +133,7 @@ endif
 	  -v $(shell pwd)/pull_secret.json:/opt/app-root/src/pull-secret.txt \
 	  -v /tmp/ansible:/opt/app-root/src/.ansible \
 	  ${ADDITIONAL_PARAMS} \
-	  -ti ${ANSIBLE_IMAGE} 
+	  -ti ${ANSIBLE_IMAGE}
 
 scaleup-shell: check ## Run shell in scaleup image
 	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
@@ -144,7 +144,7 @@ scaleup-shell: check ## Run shell in scaleup image
 	  -v /tmp/ansible:/opt/app-root/src/ \
 	  ${ADDITIONAL_PARAMS} \
 	  --entrypoint=sh \
-	  -ti ${ANSIBLE_IMAGE} 
+	  -ti ${ANSIBLE_IMAGE}
 
 cleanup-centos-machines-in-scaleup: ## DEBUG - remove stray centos machinesets
 	oc --config ${DIR}/auth/kubeconfig -n openshift-machine-api get machinesets -o name | grep centos \
