@@ -20,6 +20,10 @@ variable "resource_pool_id" {
   type = "string"
 }
 
+variable "folder" {
+  type = "string"
+}
+
 variable "datastore" {
   type = "string"
 }
@@ -32,14 +36,6 @@ variable "cluster_domain" {
   type = "string"
 }
 
-variable "extra_user_names" {
-  type = "list"
-}
-
-variable "extra_user_password_hashes" {
-  type = "list"
-}
-
 variable "datacenter_id" {
   type = "string"
 }
@@ -48,6 +44,18 @@ variable "template" {
   type = "string"
 }
 
-variable "cluster_id" {
+variable "machine_cidr" {
   type = "string"
+}
+
+variable "ipam" {
+  type = "string"
+}
+
+variable "ipam_token" {
+  type = "string"
+}
+
+variable "ip_addresses" {
+  type = "list"
 }

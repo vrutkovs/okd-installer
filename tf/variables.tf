@@ -43,14 +43,16 @@ variable "vm_network" {
   default     = "VM Network"
 }
 
-variable "extra_user_names" {
-  type    = "list"
-  default = []
+variable "ipam" {
+  type        = "string"
+  description = "The IPAM server to use for IP management."
+  default     = ""
 }
 
-variable "extra_user_password_hashes" {
-  type    = "list"
-  default = []
+variable "ipam_token" {
+  type        = "string"
+  description = "The IPAM token to use for requests."
+  default     = ""
 }
 
 /////////
@@ -72,42 +74,60 @@ variable "cluster_domain" {
   description = "The base DNS zone to add the sub zone to."
 }
 
+variable "machine_cidr" {
+  type = "string"
+}
+
 /////////
 // Bootstrap machine variables
 /////////
+
+variable "bootstrap_complete" {
+  type    = "string"
+  default = "false"
+}
 
 variable "bootstrap_ignition_url" {
   type = "string"
 }
 
-variable "step" {
-  type = "string"
+variable "bootstrap_ip" {
+  type    = "string"
+  default = ""
 }
 
 ///////////
 // Control Plane machine variables
 ///////////
 
-variable "control_plane_instance_count" {
-  type        = "string"
-  description = "The number of control plane instances to deploy."
-  default     = 3
+variable "control_plane_count" {
+  type    = "string"
+  default = "3"
 }
 
 variable "control_plane_ignition" {
   type = "string"
 }
 
+variable "control_plane_ips" {
+  type    = "list"
+  default = []
+}
+
 //////////
 // Compute machine variables
 //////////
 
-variable "compute_instance_count" {
-  type        = "string"
-  description = "The number of compute instances to deploy."
-  default     = 3
+variable "compute_count" {
+  type    = "string"
+  default = "3"
 }
 
 variable "compute_ignition" {
   type = "string"
+}
+
+variable "compute_ips" {
+  type    = "list"
+  default = []
 }
