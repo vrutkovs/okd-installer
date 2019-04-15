@@ -81,7 +81,7 @@ watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
 	  --key ${DIR}/tls/journal-gatewayd.key \
 	  "https://api.${USERNAME}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
 
-vmware: check pull-installer ## Create AWS cluster
+vsphere: check pull-installer ## Create AWS cluster
 	${PODMAN_INSTALLER} version
 	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
@@ -95,11 +95,11 @@ vmware: check pull-installer ## Create AWS cluster
 	oc --config=${DIR}/auth/kubeconfig patch configs.imageregistry.operator.openshift.io cluster --type merge --patch '{"spec":{"storage":{"filesystem":{"volumeSource": {"emptyDir":{}}}}}}'
 	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /${DIR}
 
-patch-vmware: ## Various configs
+patch-vsphere: ## Various configs
 	oc patch ingresses.config.openshift.io cluster --type=merge --patch '{"spec": {"highAvailability": {"type": "UserDefined"}}}'
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
-destroy-vmware: ## Destroy VMWare cluster
+destroy-vsphere: ## Destroy vsphere cluster
 	${PODMAN_TF} destroy -auto-approve
 	make cleanup
 	git clean tf/ -fx
