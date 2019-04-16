@@ -14,11 +14,11 @@ PODMAN_TF=${PODMAN} run --privileged --rm \
 			-e AWS_DEFAULT_REGION=us-east-1 \
 			-ti ${TERRAFORM_IMAGE}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
-INSTALLER_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:installer
-ANSIBLE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:ansible
+INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/4.1:installer
+ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/4.1:ansible
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 TF_DIR=tf
-CLI_IMAGE=registry.svc.ci.openshift.org/openshift/origin-v4.0:cli
+CLI_IMAGE=registry.svc.ci.openshift.org/origin/4.1:cli
 ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
 					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
@@ -30,7 +30,7 @@ ifneq ("$(OFFICIAL_RELEASE)","")
 endif
 LATEST_RELEASE=
 ifneq ("$(LATEST_RELEASE)","")
-	RELEASE_IMAGE=registry.svc.ci.openshift.org/openshift/origin-release:v4.0
+	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:v4.1
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
