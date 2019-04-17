@@ -61,7 +61,7 @@ ifeq (,$(wildcard ./.aws/credentials))
 endif
 
 cleanup: ## Remove remaining installer bits
-	sudo rm -rf ${DIR} || true
+	rm -rf ${DIR} || true
 	mkdir ${DIR}
 
 pull-installer: ## Pull fresh installer image
