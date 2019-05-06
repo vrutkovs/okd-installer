@@ -62,12 +62,12 @@ endif
 
 cleanup: ## Remove remaining installer bits
 	rm -rf ${DIR} || true
-	mkdir ${DIR}
 
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
+	mkdir -p ${DIR}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
