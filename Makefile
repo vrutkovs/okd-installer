@@ -30,7 +30,7 @@ ifneq ("$(OFFICIAL_RELEASE)","")
 endif
 LATEST_RELEASE=
 ifneq ("$(LATEST_RELEASE)","")
-	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:v4.1
+	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:4.1
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
