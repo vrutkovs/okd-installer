@@ -145,10 +145,6 @@ scaleup-shell: check ## Run shell in scaleup image
 	  --entrypoint=sh \
 	  -ti ${ANSIBLE_IMAGE}
 
-cleanup-centos-machines-in-scaleup: ## DEBUG - remove stray centos machinesets
-	oc --config ${DIR}/auth/kubeconfig -n openshift-machine-api get machinesets -o name | grep centos \
-	| xargs -n1 oc --config ${DIR}/auth/kubeconfig -n openshift-machine-api delete
-
 pull-tests: ## Pull test image
 	${PODMAN} pull registry.svc.ci.openshift.org/openshift/origin-v4.0:tests
 
