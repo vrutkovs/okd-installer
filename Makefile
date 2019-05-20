@@ -3,8 +3,9 @@
 BASE_DOMAIN=devcluster.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
-DIR=output
-PODMAN_RUN=${PODMAN} run --privileged --rm -v $(shell pwd)/${DIR}:/${DIR}${MOUNT_FLAGS} --user $(shell id -u):$(shell id -u)
+PODMAN_RUN=${PODMAN} run --privileged --rm \
+			-v $(shell pwd)/clusters/${USERNAME}:/output${MOUNT_FLAGS} \
+			--user $(shell id -u):$(shell id -u)
 PODMAN_TF=${PODMAN} run --privileged --rm \
 			--user $(shell id -u):$(shell id -u) \
 			--workdir=/${TF_DIR} \
@@ -61,40 +62,40 @@ ifeq (,$(wildcard ./.aws/credentials))
 endif
 
 cleanup: ## Remove remaining installer bits
-	rm -rf ${DIR} || true
+	rm -rf clusters/${USERNAME} || true
 
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
-	mkdir -p ${DIR}
+	mkdir -p clusters/${USERNAME}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=${DIR}/install-config.yaml"
+	${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${USERNAME}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /${DIR}
+	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /output
 
 watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
 	curl -Lvs --insecure \
-	  --cert ${DIR}/tls/journal-gatewayd.crt \
-	  --key ${DIR}/tls/journal-gatewayd.key \
+	  --cert clusters/${USERNAME}/tls/journal-gatewayd.crt \
+	  --key clusters/${USERNAME}/tls/journal-gatewayd.key \
 	  "https://api.${USERNAME}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
 
 vsphere: check pull-installer ## Create vsphere cluster
 	${PODMAN_INSTALLER} version
-	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=${DIR}/install-config.yaml"
-	${PODMAN_INSTALLER} create ignition-configs --dir /${DIR}
+	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=clusters/${USERNAME}/install-config.yaml"
+	${PODMAN_INSTALLER} create ignition-configs --dir /output
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
 	${PODMAN_TF} apply -auto-approve
-	${PODMAN_INSTALLER} wait-for bootstrap-complete --log-level debug --dir /${DIR}
+	${PODMAN_INSTALLER} wait-for bootstrap-complete --log-level debug --dir /output
 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
-	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /${DIR}
+	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /output
 
 patch-vsphere: ## Various configs
 	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
-	while true; do oc --config=${DIR}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
+	while true; do oc --config=clusters/${USERNAME}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
 destroy-vsphere: ## Destroy vsphere cluster
@@ -106,7 +107,7 @@ destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir /${DIR}
+	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir /output
 	make cleanup
 
 update-cli: ## Update CLI image
@@ -127,7 +128,7 @@ endif
 	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/${DIR}:/cluster \
+	  -v $(shell pwd)/clusters/${USERNAME}:/cluster \
 	  -v $(shell pwd)/pull_secret.json:/opt/app-root/src/pull-secret.txt \
 	  -v /tmp/ansible:/opt/app-root/src/.ansible \
 	  ${ADDITIONAL_PARAMS} \
@@ -137,7 +138,7 @@ scaleup-shell: check ## Run shell in scaleup image
 	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/${DIR}:/cluster \
+	  -v $(shell pwd)/clusters/${USERNAME}:/cluster \
 	  -v $(shell pwd)/pull_secret.json:/cluster/pull_secret.json \
 	  -v /tmp/ansible:/opt/app-root/src/ \
 	  ${ADDITIONAL_PARAMS} \
