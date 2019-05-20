@@ -4,7 +4,3 @@ ssh-publickey
 ssh-privatekey
 clusters/
 install-config.yaml
-terraform.tfvars.template
-tf/.terraform*
-tf/terraform.tfstate*
-tf/*.tfvars
