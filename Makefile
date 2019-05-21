@@ -29,7 +29,7 @@ PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.0.0-0.8
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.0-rc.5
 endif
 LATEST_RELEASE=
 ifneq ("$(LATEST_RELEASE)","")
