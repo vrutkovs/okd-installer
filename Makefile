@@ -16,6 +16,8 @@ PODMAN_TF=${PODMAN} run --privileged --rm \
 			-ti ${TERRAFORM_IMAGE}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/4.2:installer
+LOG_LEVEL=info
+LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/4.2:ansible
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 TF_DIR=tf
@@ -74,7 +76,7 @@ aws: check pull-installer ## Create AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster --log-level debug --dir /output
+	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
 watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
 	curl -Lvs --insecure \
@@ -89,9 +91,9 @@ vsphere: check pull-installer ## Create vsphere cluster
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
 	${PODMAN_TF} apply -auto-approve
-	${PODMAN_INSTALLER} wait-for bootstrap-complete --log-level debug --dir /output
+	${PODMAN_INSTALLER} wait-for bootstrap-complete ${LOG_LEVEL_ARGS} --dir /output
 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
-	${PODMAN_INSTALLER} wait-for install-complete --log-level debug --dir /output
+	${PODMAN_INSTALLER} wait-for install-complete ${LOG_LEVEL_ARGS} --dir /output
 
 patch-vsphere: ## Various configs
 	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
@@ -107,7 +109,7 @@ destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} destroy cluster --log-level debug --dir /output
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 
 update-cli: ## Update CLI image
