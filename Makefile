@@ -27,13 +27,13 @@ ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
 PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
+LATEST_RELEASE=1
+ifneq ("$(LATEST_RELEASE)","")
+	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:4.2
+endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
 	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.0-rc.5
-endif
-LATEST_RELEASE=
-ifneq ("$(LATEST_RELEASE)","")
-	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:4.2
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
