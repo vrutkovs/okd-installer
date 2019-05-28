@@ -72,7 +72,7 @@ pull-installer: ## Pull fresh installer image
 aws: check pull-installer ## Create AWS cluster
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \

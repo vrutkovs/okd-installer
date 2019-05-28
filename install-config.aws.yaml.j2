@@ -2,7 +2,7 @@ apiVersion: v1beta4
 baseDomain: {{ lookup('env', "BASE_DOMAIN") }}
 clusterID: {{ 99999999 | random | to_uuid }}
 metadata:
-  name: {{ lookup('env', "USERNAME") }}
+  name: {{ lookup('env', "CLUSTER") }}
 networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
