@@ -15,14 +15,18 @@ PODMAN_TF=${PODMAN} run --privileged --rm \
 			-e AWS_DEFAULT_REGION=us-east-1 \
 			-ti ${TERRAFORM_IMAGE}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
-INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/4.2:installer
+
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
-ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/4.2:ansible
-TESTS_IMAGE=registry.svc.ci.openshift.org/origin/4.2:tests
+
+VERSION=4.2
+INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:installer
+ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:ansible
+TESTS_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:tests
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
+CLI_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:cli
+
 TF_DIR=tf
-CLI_IMAGE=registry.svc.ci.openshift.org/origin/4.2:cli
 ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
 					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
 					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
