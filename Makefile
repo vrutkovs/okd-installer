@@ -19,6 +19,7 @@ INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/4.2:installer
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/4.2:ansible
+TESTS_IMAGE=registry.svc.ci.openshift.org/origin/4.2:tests
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 TF_DIR=tf
 CLI_IMAGE=registry.svc.ci.openshift.org/origin/4.2:cli
@@ -148,18 +149,21 @@ scaleup-shell: check ## Run shell in scaleup image
 	  -ti ${ANSIBLE_IMAGE}
 
 pull-tests: ## Pull test image
-	${PODMAN} pull registry.svc.ci.openshift.org/openshift/origin-v4.0:tests
+	${PODMAN} pull ${TESTS_IMAGE}
 
-test: ## Run openshift tests
+tests: ## Run openshift tests
 	rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/auth:/auth${MOUNT_FLAGS} \
-	  -v $(shell pwd)/test.sh:/usr/bin/test.sh \
+	  -v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
 	  -v $(shell pwd)/test-artifacts:/tmp/artifacts \
-	  -v ~/.ssh:/usr/share/ansible/openshift-ansible/.ssh \
-	  ${ADDITIONAL_PARAMS} \
-	  --entrypoint=/bin/sh \
-	  -ti registry.svc.ci.openshift.org/openshift/origin-v4.0:tests \
-	  /usr/bin/test.sh
+	  -v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
+	  -v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
+		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
+		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
+		-e CLUSTER_NAME=${CLUSTER} \
+		-e BASE_DOMAIN=${BASE_DOMAIN} \
+	  --entrypoint=/bin/bash \
+	  -ti ${TESTS_IMAGE}
