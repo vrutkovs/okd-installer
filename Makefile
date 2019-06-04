@@ -156,7 +156,7 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
-	rm -rf test-artifacts/
+	sudo rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
@@ -173,7 +173,7 @@ tests: ## Run openshift tests
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
-	rm -rf test-artifacts/
+	sudo rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 		${ANSIBLE_MOUNT_OPTS} \
