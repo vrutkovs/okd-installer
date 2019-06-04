@@ -171,3 +171,21 @@ tests: ## Run openshift tests
 		-e BASE_DOMAIN=${BASE_DOMAIN} \
 	  --entrypoint=/bin/bash \
 	  -ti ${TESTS_IMAGE}
+
+tests-restore-snapshot:
+	rm -rf test-artifacts/
+	mkdir test-artifacts
+	${PODMAN_RUN} \
+		${ANSIBLE_MOUNT_OPTS} \
+		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
+		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
+		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
+		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
+		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
+		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
+		-e CLUSTER_NAME=${CLUSTER} \
+		-e BASE_DOMAIN=${BASE_DOMAIN} \
+		-ti ${TESTS_IMAGE} \
+		openshift-tests run-dr-restore-snapshot all -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit

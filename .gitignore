@@ -4,3 +4,4 @@ ssh-publickey
 ssh-privatekey
 clusters/
 install-config.yaml
+test-artifacts/
