@@ -181,6 +181,7 @@ tests-restore-snapshot:
 		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
 		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
 		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
 		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
 		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
@@ -188,4 +189,4 @@ tests-restore-snapshot:
 		-e CLUSTER_NAME=${CLUSTER} \
 		-e BASE_DOMAIN=${BASE_DOMAIN} \
 		-ti ${TESTS_IMAGE} \
-		openshift-tests run-dr-restore-snapshot all -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit
+		/usr/local/bin/restore-snapshot.sh
