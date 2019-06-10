@@ -190,3 +190,22 @@ tests-restore-snapshot:
 		-e BASE_DOMAIN=${BASE_DOMAIN} \
 		-ti ${TESTS_IMAGE} \
 		/usr/local/bin/restore-snapshot.sh
+
+tests-quorum-restore:
+	sudo rm -rf test-artifacts/
+	mkdir test-artifacts
+	${PODMAN_RUN} \
+		${ANSIBLE_MOUNT_OPTS} \
+		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
+		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
+		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
+		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
+		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
+		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
+		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
+		-e CLUSTER_NAME=${CLUSTER} \
+		-e BASE_DOMAIN=${BASE_DOMAIN} \
+		-ti ${TESTS_IMAGE} \
+		/usr/local/bin/quorum-restore.sh
