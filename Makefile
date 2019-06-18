@@ -34,7 +34,7 @@ PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
-	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:4.2
+	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:${VERSION}
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
