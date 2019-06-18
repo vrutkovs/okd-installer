@@ -209,3 +209,5 @@ tests-quorum-restore:
 		-e BASE_DOMAIN=${BASE_DOMAIN} \
 		-ti ${TESTS_IMAGE} \
 		/usr/local/bin/quorum-restore.sh
+
+.PHONY: all $(MAKECMDGOALS)
