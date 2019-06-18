@@ -14,6 +14,16 @@ PODMAN_TF=${PODMAN} run --privileged --rm \
 			-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 			-e AWS_DEFAULT_REGION=us-east-1 \
 			-ti ${TERRAFORM_IMAGE}
+TESTS_PARAMS=\
+		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
+		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
+		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
+		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
+		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
+		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
+		-e CLUSTER_NAME=${CLUSTER} \
+		-e BASE_DOMAIN=${BASE_DOMAIN}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 
 LOG_LEVEL=info
@@ -157,55 +167,28 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
-	mkdir clusters/${CLUSTER}/test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
-		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
-		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
-		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
-		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
-		-e CLUSTER_NAME=${CLUSTER} \
-		-e BASE_DOMAIN=${BASE_DOMAIN} \
-	  --entrypoint=/bin/bash \
+		${TESTS_PARAMS} \
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
-	mkdir clusters/${CLUSTER}/test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
-		${ANSIBLE_MOUNT_OPTS} \
-		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
-		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
-		-v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
-		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
-		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
-		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
-		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
-		-e CLUSTER_NAME=${CLUSTER} \
-		-e BASE_DOMAIN=${BASE_DOMAIN} \
-		-ti ${TESTS_IMAGE} \
-		/usr/local/bin/restore-snapshot.sh
+	  ${TESTS_PARAMS} \
+	  -v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
+	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+	  -ti ${TESTS_IMAGE} \
+	  /usr/local/bin/restore-snapshot.sh
 
 tests-quorum-restore:
-	mkdir clusters/${CLUSTER}/test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
-		${ANSIBLE_MOUNT_OPTS} \
-		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
-		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
-		-v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
-		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
-		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
-		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
-		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
-		-e CLUSTER_NAME=${CLUSTER} \
-		-e BASE_DOMAIN=${BASE_DOMAIN} \
-		-ti ${TESTS_IMAGE} \
-		/usr/local/bin/quorum-restore.sh
+	  ${TESTS_PARAMS} \
+	  -v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
+	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+	  -ti ${TESTS_IMAGE} \
+	  /usr/local/bin/quorum-restore.sh
 
 .PHONY: all $(MAKECMDGOALS)
