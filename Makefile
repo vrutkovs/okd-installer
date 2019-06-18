@@ -156,14 +156,13 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
-	rm -rf test-artifacts/
-	mkdir test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-	  -v $(shell pwd)/test-artifacts:/tmp/artifacts \
-	  -v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
-	  -v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
+		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
+		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
 		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
 		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
@@ -173,14 +172,13 @@ tests: ## Run openshift tests
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
-	rm -rf test-artifacts/
-	mkdir test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts
 	${PODMAN_RUN} \
 		${ANSIBLE_MOUNT_OPTS} \
 		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
 		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
 		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
 		-v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
 		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
@@ -192,14 +190,13 @@ tests-restore-snapshot:
 		/usr/local/bin/restore-snapshot.sh
 
 tests-quorum-restore:
-	rm -rf test-artifacts/
-	mkdir test-artifacts
+	mkdir clusters/${CLUSTER}/test-artifacts
 	${PODMAN_RUN} \
 		${ANSIBLE_MOUNT_OPTS} \
 		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
 		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
 		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
+		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
 		-v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
 		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
