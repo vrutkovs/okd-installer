@@ -5,9 +5,9 @@ MOUNT_FLAGS=
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --privileged --rm \
 			-v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
-			--user $(shell id -u):$(shell id -u)
+			--userns=keep-id
 PODMAN_TF=${PODMAN} run --privileged --rm \
-			--user $(shell id -u):$(shell id -u) \
+			--userns=keep-id \
 			--workdir=/${TF_DIR} \
 			-v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} \
 			-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
@@ -132,7 +132,7 @@ scaleup: check ## Scaleup AWS workers
 ifndef ANSIBLE_REPO
 	$(error Location of the ansible repo is not set)
 endif
-	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
+	rm -rf /tmp/ansible; mkdir /tmp/ansible
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 	  -v $(shell pwd)/clusters/${CLUSTER}:/cluster \
@@ -142,7 +142,7 @@ endif
 	  -ti ${ANSIBLE_IMAGE}
 
 scaleup-shell: check ## Run shell in scaleup image
-	sudo rm -rf /tmp/ansible; mkdir /tmp/ansible
+	rm -rf /tmp/ansible; mkdir /tmp/ansible
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 	  -v $(shell pwd)/clusters/${CLUSTER}:/cluster \
@@ -156,7 +156,7 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
-	sudo rm -rf test-artifacts/
+	rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
@@ -173,7 +173,7 @@ tests: ## Run openshift tests
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
-	sudo rm -rf test-artifacts/
+	rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 		${ANSIBLE_MOUNT_OPTS} \
@@ -192,7 +192,7 @@ tests-restore-snapshot:
 		/usr/local/bin/restore-snapshot.sh
 
 tests-quorum-restore:
-	sudo rm -rf test-artifacts/
+	rm -rf test-artifacts/
 	mkdir test-artifacts
 	${PODMAN_RUN} \
 		${ANSIBLE_MOUNT_OPTS} \
