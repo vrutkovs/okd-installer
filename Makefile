@@ -38,6 +38,7 @@ ifneq ("$(LATEST_RELEASE)","")
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
+	VERSION=4.1
 	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.1
 endif
 ifneq ("$(RELEASE_IMAGE)","")
