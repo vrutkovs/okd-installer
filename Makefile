@@ -18,7 +18,7 @@ TESTS_PARAMS=\
 		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
 		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
 		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/clusters/${CLUSTER}/test-artifacts:/tmp/artifacts \
+		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
 		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
 		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
@@ -167,14 +167,12 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
-	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 		${TESTS_PARAMS} \
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
-	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
 	  ${TESTS_PARAMS} \
 	  -v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
@@ -183,7 +181,6 @@ tests-restore-snapshot:
 	  /usr/local/bin/restore-snapshot.sh
 
 tests-quorum-restore:
-	mkdir clusters/${CLUSTER}/test-artifacts || true
 	${PODMAN_RUN} \
 	  ${TESTS_PARAMS} \
 	  -v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
