@@ -8,5 +8,4 @@ if ! whoami &> /dev/null; then
   fi
 fi
 
-#openshift-tests run-dr-restore-snapshot all -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit
 openshift-tests run-dr restore-snapshot -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit
