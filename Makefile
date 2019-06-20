@@ -177,6 +177,7 @@ tests-restore-snapshot:
 	  ${TESTS_PARAMS} \
 	  -v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
 	  /usr/local/bin/restore-snapshot.sh
 
@@ -185,6 +186,7 @@ tests-quorum-restore:
 	  ${TESTS_PARAMS} \
 	  -v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
 	  /usr/local/bin/quorum-restore.sh
 
