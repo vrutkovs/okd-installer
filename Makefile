@@ -18,7 +18,7 @@ TESTS_PARAMS=\
 		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
 		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
 		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/test-artifacts:/tmp/artifacts \
+		-v $(shell pwd)/test-artifacts/${CLUSTER}:/tmp/artifacts/cluster \
 		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
 		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
 		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
@@ -179,7 +179,7 @@ tests-restore-snapshot:
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
-	  /usr/local/bin/restore-snapshot.sh
+	  openshift-tests run-dr restore-snapshot -o /tmp/artifacts/cluster/e2e.log --junit-dir /tmp/artifacts/cluster/junit
 
 tests-quorum-restore:
 	${PODMAN_RUN} \
@@ -188,6 +188,6 @@ tests-quorum-restore:
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
-	  /usr/local/bin/quorum-restore.sh
+	  openshift-tests run-dr quorum-restore -o /tmp/artifacts/cluster/e2e.log --junit-dir /tmp/artifacts/cluster/junit
 
 .PHONY: all $(MAKECMDGOALS)
