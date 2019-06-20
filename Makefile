@@ -80,7 +80,7 @@ ifeq (,$(wildcard ./.aws/credentials))
 endif
 
 cleanup: ## Remove remaining installer bits
-	rm -rf clusters/${CLUSTER} || true
+	rm -rf clusters/${CLUSTER}; rm -rf test-artifacts/${CLUSTER} || true
 
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
