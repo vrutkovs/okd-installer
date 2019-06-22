@@ -86,7 +86,7 @@ pull-installer: ## Pull fresh installer image
 	${PODMAN} pull ${INSTALLER_IMAGE}
 
 aws: check pull-installer ## Create AWS cluster
-	mkdir -p clusters/${CLUSTER}
+	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
