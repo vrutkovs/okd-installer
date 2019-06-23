@@ -67,7 +67,7 @@ help:
 
 check: ## Verify all necessary files exist
 ifndef CLUSTER
-	CLUSTER=${USERNAME}
+CLUSTER := ${USERNAME}
 endif
 ifeq (,$(wildcard ./pull_secret.json))
 	$(error "pull_secret.json not found!")
