@@ -49,7 +49,7 @@ endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
 	VERSION=4.1
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.3
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.1
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
