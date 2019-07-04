@@ -173,18 +173,18 @@ tests: ## Run openshift tests
 	  -ti ${TESTS_IMAGE}
 
 tests-restore-snapshot:
+	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
 	${PODMAN_RUN} \
 	  ${TESTS_PARAMS} \
-	  -v $(shell pwd)/tests/restore-snapshot.sh:/usr/local/bin/restore-snapshot.sh \
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
 	  openshift-tests run-dr restore-snapshot -o /tmp/artifacts/cluster/e2e.log --junit-dir /tmp/artifacts/cluster/junit
 
 tests-quorum-restore:
+	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
 	${PODMAN_RUN} \
 	  ${TESTS_PARAMS} \
-	  -v $(shell pwd)/tests/quorum-restore.sh:/usr/local/bin/quorum-restore.sh \
 	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 	  -e TEST_SUITE=openshift/conformance/parallel \
 	  -ti ${TESTS_IMAGE} \
