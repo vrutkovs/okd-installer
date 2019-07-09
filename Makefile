@@ -1,6 +1,7 @@
 .EXPORT_ALL_VARIABLES:
 .DEFAULT_GOAL := help
-BASE_DOMAIN=devcluster.openshift.com
+AWS_BASE_DOMAIN=devcluster.openshift.com
+GCE_BASE_DOMAIN=origin-gce.dev.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
@@ -108,10 +109,21 @@ okd-upi: check pull-installer ## Create OKD cluster on AWS
 aws: check pull-installer ## Create AWS cluster
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+		-e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+
+gcp: check pull-installer ## Create GCP cluster
+	mkdir -p clusters/${CLUSTER}/.ssh
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	env CLUSTER=${CLUSTER} BASE_DOMAIN=${GCE_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.gcp.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
+	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
+	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
 watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
@@ -145,6 +157,13 @@ destroy-aws: ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
+	make cleanup
+
+destroy-gcp: ## Destroy GCP cluster
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+		-e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
+		-v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 

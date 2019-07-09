@@ -1,0 +1,21 @@
+apiVersion: v1beta4
+baseDomain: {{ lookup('env', "BASE_DOMAIN") }}
+clusterID: {{ 99999999 | random | to_uuid }}
+metadata:
+  name: {{ lookup('env', "CLUSTER") }}
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineCIDR: 10.0.0.0/16
+  serviceNetwork:
+  - 172.30.0.0/16
+  networkType: OpenshiftSDN
+platform:
+  gcp:
+    projectID: openshift-gce-devel
+    region: us-east1
+pullSecret: |
+  {{ lookup('file', "pull_secret.json") | indent(2) }}
+sshKey: |
+  {{ lookup('file', "ssh-publickey") | indent(2) }}

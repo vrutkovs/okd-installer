@@ -1,5 +1,6 @@
 pull_secret.json
 .aws/
+.gcp/
 ssh-publickey
 ssh-privatekey
 clusters/
