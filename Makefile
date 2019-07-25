@@ -167,10 +167,12 @@ pull-tests: ## Pull test image
 	${PODMAN} pull ${TESTS_IMAGE}
 
 tests: ## Run openshift tests
+	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 		${TESTS_PARAMS} \
-	  -ti ${TESTS_IMAGE}
+		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+	  -ti ${TESTS_IMAGE} sh
 
 tests-restore-snapshot:
 	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
