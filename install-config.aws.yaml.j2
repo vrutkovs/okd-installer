@@ -13,6 +13,7 @@ networking:
   networkType: OpenshiftSDN
 platform:
   aws:
+    amiID: ami-06e142296367bb4f7
     region: us-east-2
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
