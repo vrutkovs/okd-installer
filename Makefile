@@ -3,7 +3,7 @@
 BASE_DOMAIN=devcluster.openshift.com
 MOUNT_FLAGS=
 PODMAN=podman
-PODMAN_RUN=${PODMAN} run --privileged --rm \
+PODMAN_RUN=${PODMAN} run --rm \
 			-v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
 			--userns=keep-id
 PODMAN_TF=${PODMAN} run --privileged --rm \
