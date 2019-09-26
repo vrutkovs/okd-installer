@@ -29,7 +29,7 @@ PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
-VERSION=4.2
+VERSION=4.3
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:ansible
 TESTS_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:tests
