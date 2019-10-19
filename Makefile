@@ -91,7 +91,7 @@ okd: check pull-installer ## Create OKD cluster on AWS
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/go/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
+	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
@@ -101,7 +101,7 @@ okd-upi: check pull-installer ## Create OKD cluster on AWS
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/go/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
+	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create ignition-configs ${LOG_LEVEL_ARGS} --dir /output
