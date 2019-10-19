@@ -89,7 +89,7 @@ pull-installer: ## Pull fresh installer image
 okd: check pull-installer ## Create OKD cluster on AWS
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
