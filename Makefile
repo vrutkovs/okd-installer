@@ -169,7 +169,7 @@ destroy-gcp: ## Destroy GCP cluster
 
 update-cli: ## Update CLI image
 	${PODMAN} pull ${CLI_IMAGE}
-	${PODMAN_RUN} \
+	${PODMAN} run --rm --userns=keep-id \
 	  -v ~/.local/bin:/host/bin \
 	  --entrypoint=sh \
 	  -ti ${CLI_IMAGE} \
