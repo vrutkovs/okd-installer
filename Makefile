@@ -86,7 +86,7 @@ cleanup: ## Remove remaining installer bits
 	rm -rf clusters/${CLUSTER}; rm -rf test-artifacts/${CLUSTER} || true
 
 pull-installer: ## Pull fresh installer image
-	${PODMAN} pull ${INSTALLER_IMAGE}
+	${PODMAN} pull --authfile $(shell pwd)/pull_secret.json ${INSTALLER_IMAGE}
 
 okd: check pull-installer ## Create OKD cluster on AWS
 	mkdir -p clusters/${CLUSTER}/.ssh
