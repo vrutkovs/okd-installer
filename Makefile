@@ -3,6 +3,7 @@
 AWS_BASE_DOMAIN=devcluster.openshift.com
 GCE_BASE_DOMAIN=origin-gce.dev.openshift.com
 MOUNT_FLAGS=
+TYPE=origin
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
 			-v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
@@ -31,11 +32,12 @@ LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
 VERSION=4.3
-INSTALLER_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:installer
-ANSIBLE_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:ansible
-TESTS_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:tests
+INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:installer
+LIBVIR_INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:libvirt-installer
+ANSIBLE_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:ansible
+TESTS_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:tests
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
-CLI_IMAGE=registry.svc.ci.openshift.org/origin/${VERSION}:cli
+CLI_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:cli
 
 TF_DIR=tf
 ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
@@ -45,7 +47,7 @@ PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
-	RELEASE_IMAGE=registry.svc.ci.openshift.org/origin/release:${VERSION}
+	RELEASE_IMAGE=registry.svc.ci.openshift.org/${TYPE}/release:${VERSION}
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
