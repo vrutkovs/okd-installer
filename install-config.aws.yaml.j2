@@ -13,7 +13,7 @@ networking:
   networkType: OpenshiftSDN
 platform:
   aws:
-    region: us-east-2
+    region: eu-central-1
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
