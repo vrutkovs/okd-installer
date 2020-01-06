@@ -1,4 +1,4 @@
-pull_secret.json
+pull_secret*.json
 .aws/
 .gcp/
 ssh-publickey
