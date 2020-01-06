@@ -212,7 +212,7 @@ tests: ## Run openshift tests
 	${PODMAN_RUN} \
 	  ${ANSIBLE_MOUNT_OPTS} \
 		${TESTS_PARAMS} \
-		-v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
+		-v /home/vrutkovs/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
 	  -ti ${TESTS_IMAGE} sh
 
 tests-restore-snapshot:
