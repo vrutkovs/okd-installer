@@ -98,6 +98,14 @@ okd: check pull-installer ## Create OKD cluster on AWS
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
+okd-libvirt: check ## Create OKD cluster on AWS
+	mkdir -p clusters/${CLUSTER}/.ssh
+	${PODMAN} pull ${LIBVIR_INSTALLER_IMAGE}
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
+	  --entrypoint=sh \
+	  -ti ${LIBVIR_INSTALLER_IMAGE} -c "/bin/openshift-install create cluster ${LOG_LEVEL_ARGS} --dir /output"
+
 okd-upi: check pull-installer ## Create OKD cluster on AWS
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
