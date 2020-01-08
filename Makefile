@@ -31,7 +31,7 @@ PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
-VERSION=4.3
+VERSION=4.4
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:installer
 LIBVIR_INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:libvirt-installer
 ANSIBLE_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:ansible
