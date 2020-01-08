@@ -6,7 +6,6 @@ metadata:
 platform:
   aws:
     region: us-east-1
-    amiID: ami-044e6cf61a0050b4b
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
