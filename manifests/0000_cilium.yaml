@@ -124,7 +124,7 @@ data:
   # - none
   # - auto (automatically detect the container runtime)
   #
-  container-runtime: none
+  container-runtime: crio
 
   masquerade: "true"
 
