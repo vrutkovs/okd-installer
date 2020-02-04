@@ -98,7 +98,7 @@ ifneq ("$(MANIFESTS)","")
 		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 		-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 		-ti ${INSTALLER_IMAGE} create manifests ${LOG_LEVEL_ARGS} --dir /output
-	cp -rvf ${MANIFESTS}/* -v $(shell pwd)/clusters/${CLUSTER}/openshift
+	cp -rvf ${MANIFESTS}/* -v $(shell pwd)/clusters/${CLUSTER}/manifests
 endif
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/usr/bin/openshift-install \
