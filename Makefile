@@ -94,18 +94,17 @@ okd: check pull-installer ## Create OKD cluster on AWS
 	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
 ifneq ("$(MANIFESTS)","")
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
+	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/usr/bin/openshift-install \
 		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 		-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 		-ti ${INSTALLER_IMAGE} create manifests ${LOG_LEVEL_ARGS} --dir /output
-	cp -rvf ${MANIFESTS}/* -v $(shell pwd)/clusters/${CLUSTER}/manifests
+	cp -rvf ${MANIFESTS}/* -v $(shell pwd)/clusters/${CLUSTER}/openshift
 endif
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
+	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/usr/bin/openshift-install \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create ignition-configs ${LOG_LEVEL_ARGS} --dir /output
-		podman run --rm -i quay.io/coreos/ignition-validate - < clusters/${CLUSTER}/bootstrap.ign
+	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
 okd-libvirt: check ## Create OKD cluster on AWS
 	mkdir -p clusters/${CLUSTER}/.ssh
