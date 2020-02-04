@@ -491,12 +491,12 @@ spec:
         name: bpf-maps
       # To install cilium cni plugin in the host
       - hostPath:
-          path:  /opt/cni/bin
+          path:  /var/lib/cni/bin
           type: DirectoryOrCreate
         name: cni-path
         # To install cilium cni configuration in the host
       - hostPath:
-          path: /etc/cni/net.d
+          path: /etc/kubernetes/cni/net.d/
           type: DirectoryOrCreate
         name: etc-cni-netd
         # To be able to load kernel modules
