@@ -115,8 +115,8 @@ data:
   # wait-bpf-mount makes init container wait until bpf filesystem is mounted
   wait-bpf-mount: "false"
 
-  masquerade: "true"
-  install-iptables-rules: "true"
+  masquerade: "false"
+  install-iptables-rules: "false"
   auto-direct-node-routes: "false"
   kube-proxy-replacement:  "probe"
   enable-host-reachable-services: "false"
@@ -124,3 +124,4 @@ data:
   enable-node-port: "false"
   enable-well-known-identities: "false"
   enable-remote-node-identity: "true"
+  enable-l7-proxy: "false"
