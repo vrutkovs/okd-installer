@@ -184,7 +184,7 @@ spec:
         name: bpf-maps
       # To install cilium cni plugin in the host
       - hostPath:
-          path: /var/lib/cni/bin
+          path: /opt/cni/bin
           type: DirectoryOrCreate
         name: cni-path
         # To install cilium cni configuration in the host
