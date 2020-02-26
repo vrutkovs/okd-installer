@@ -150,6 +150,8 @@ spec:
               key: wait-bpf-mount
               name: cilium-config
               optional: true
+        - name: "CNI_CONF_NAME"
+          value: "75-cilium.conf"
         image: "docker.io/cilium/cilium:v1.7.0"
         imagePullPolicy: IfNotPresent
         name: clean-cilium-state
