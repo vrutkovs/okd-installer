@@ -3,14 +3,12 @@ kind: DaemonSet
 metadata:
   labels:
     k8s-app: cilium
-    kubernetes.io/cluster-service: "true"
   name: cilium
   namespace: kube-system
 spec:
   selector:
     matchLabels:
       k8s-app: cilium
-      kubernetes.io/cluster-service: "true"
   template:
     metadata:
       annotations:
@@ -19,16 +17,39 @@ spec:
         # gets priority scheduling.
         # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
         scheduler.alpha.kubernetes.io/critical-pod: ""
-        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
       labels:
         k8s-app: cilium
-        kubernetes.io/cluster-service: "true"
     spec:
       containers:
       - args:
         - --config-dir=/tmp/cilium/config-map
         command:
         - cilium-agent
+        livenessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+            - --brief
+          failureThreshold: 10
+          # The initial delay for the liveness probe is intentionally large to
+          # avoid an endless kill & restart cycle if in the event that the initial
+          # bootstrapping takes longer than expected.
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+            - --brief
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
         env:
         - name: K8S_NODE_NAME
           valueFrom:
@@ -66,43 +87,19 @@ spec:
               key: custom-cni-conf
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:v1.6.5"
+        image: "docker.io/cilium/cilium:v1.7.0"
         imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
               command:
-              - /cni-install.sh
+              - "/cni-install.sh"
+              - "--enable-debug=false"
           preStop:
             exec:
               command:
               - /cni-uninstall.sh
-        livenessProbe:
-          exec:
-            command:
-            - cilium
-            - status
-            - --brief
-          failureThreshold: 10
-          # The initial delay for the liveness probe is intentionally large to
-          # avoid an endless kill & restart cycle if in the event that the initial
-          # bootstrapping takes longer than expected.
-          initialDelaySeconds: 120
-          periodSeconds: 30
-          successThreshold: 1
-          timeoutSeconds: 5
         name: cilium-agent
-        readinessProbe:
-          exec:
-            command:
-            - cilium
-            - status
-            - --brief
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 30
-          successThreshold: 1
-          timeoutSeconds: 5
         securityContext:
           capabilities:
             add:
@@ -153,7 +150,7 @@ spec:
               key: wait-bpf-mount
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:v1.6.5"
+        image: "docker.io/cilium/cilium:v1.7.0"
         imagePullPolicy: IfNotPresent
         name: clean-cilium-state
         securityContext:
@@ -164,9 +161,11 @@ spec:
         volumeMounts:
         - mountPath: /sys/fs/bpf
           name: bpf-maps
+          mountPropagation: HostToContainer
         - mountPath: /var/run/cilium
           name: cilium-run
       restartPolicy: Always
+      priorityClassName: system-node-critical
       serviceAccount: cilium
       serviceAccountName: cilium
       terminationGracePeriodSeconds: 1
@@ -185,12 +184,12 @@ spec:
         name: bpf-maps
       # To install cilium cni plugin in the host
       - hostPath:
-          path:  /var/lib/cni/bin
+          path: /var/lib/cni/bin
           type: DirectoryOrCreate
         name: cni-path
         # To install cilium cni configuration in the host
       - hostPath:
-          path: /etc/kubernetes/cni/net.d/
+          path: /etc/cni/net.d
           type: DirectoryOrCreate
         name: etc-cni-netd
         # To be able to load kernel modules

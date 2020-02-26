@@ -28,6 +28,7 @@ spec:
       - args:
         - --debug=$(CILIUM_DEBUG)
         - --identity-allocation-mode=$(CILIUM_IDENTITY_ALLOCATION_MODE)
+        - --synchronize-k8s-nodes=true
         command:
         - cilium-operator
         env:
@@ -107,7 +108,7 @@ spec:
               key: identity-allocation-mode
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/operator:v1.6.5"
+        image: "docker.io/cilium/operator:v1.7.0"
         imagePullPolicy: IfNotPresent
         name: cilium-operator
         livenessProbe:
@@ -118,7 +119,6 @@ spec:
           initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 3
-
       hostNetwork: true
       restartPolicy: Always
       serviceAccount: cilium-operator
