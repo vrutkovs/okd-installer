@@ -166,6 +166,20 @@ spec:
           mountPropagation: HostToContainer
         - mountPath: /var/run/cilium
           name: cilium-run
+      - command:
+        - cp
+        - -rvf
+        - /multus/00-multus.conf
+        - /host/etc/cni/net.d
+        image: "docker.io/cilium/cilium:v1.7.0"
+        imagePullPolicy: IfNotPresent
+        name: prepare-multus-config
+        volumeMounts:
+        - mountPath: /multus
+          name: multus-config
+          mountPropagation: HostToContainer
+        - mountPath: /host/etc/cni/net.d
+          name: etc-cni-netd
       restartPolicy: Always
       priorityClassName: system-node-critical
       serviceAccount: cilium
@@ -213,6 +227,10 @@ spec:
       - configMap:
           name: cilium-config
         name: cilium-config-path
+        # Multus config
+      - configMap:
+          name: multus-cni-config
+        name: multus-config
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
