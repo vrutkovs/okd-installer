@@ -128,6 +128,19 @@ openstack: check pull-installer ## Create OKD cluster on Openstack
 	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
+destroy-openstack: ## Destroy openstack cluster
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+		-e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
+	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
+	make cleanup
+
+destroy-ovirt: ## Destroy ovirt cluster
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS} \
+	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
+	make cleanup
 
 destroy-vsphere: ## Destroy vsphere cluster
 	${PODMAN_TF} destroy -auto-approve
