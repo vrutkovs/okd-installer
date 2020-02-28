@@ -89,6 +89,7 @@ gcp: check pull-installer ## Create GCP cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
+		-e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="https://storage.googleapis.com/walters-rhcos-test/fedora-coreos/fedora-coreos-31-20200127-dev-3-gcp-x86-64.tar.gz" \
 	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
