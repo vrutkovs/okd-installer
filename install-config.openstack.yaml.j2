@@ -1,0 +1,30 @@
+apiVersion: v1
+baseDomain: {{ lookup('env', "BASE_DOMAIN") }}
+clusterID: {{ 99999999 | random | to_uuid }}
+metadata:
+  name: {{ lookup('env', "CLUSTER") }}
+#controlPlane:
+#  name: master
+#  platform:
+#    openstack:
+#      rootVolume:
+#        size: 25
+#        type: performance
+platform:
+  openstack:
+    cloud:           shiftstack
+    externalNetwork: provider_net_ocp_dev
+    computeFlavor:   m1.xlarge
+    lbFloatingIP:    10.0.118.53
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineCIDR: 10.0.128.0/17
+  serviceNetwork:
+  - 172.30.0.0/16
+  networkType: OVNKubernetes
+pullSecret: |
+  {{ lookup('file', "pull_secret.json") | indent(2) }}
+sshKey: |
+  {{ lookup('file', "ssh-publickey") | indent(2) }}
