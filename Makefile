@@ -108,6 +108,16 @@ patch-vsphere: ## Various configs
 	while true; do oc --config=clusters/${CLUSTER}/auth/kubeconfig get configs.imageregistry.operator.openshift.io/cluster && break; done
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
+ovirt: check pull-installer ## Create OKD cluster on oVirt
+	mkdir -p clusters/${CLUSTER}/.ssh
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.ovirt.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fcos-31" \
+	  -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS} \
+	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+
 destroy-vsphere: ## Destroy vsphere cluster
 	${PODMAN_TF} destroy -auto-approve
 	make cleanup

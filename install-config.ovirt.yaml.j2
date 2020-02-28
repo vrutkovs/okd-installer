@@ -1,0 +1,55 @@
+apiVersion: v1
+baseDomain: metalkube.org
+clusterID: {{ 99999999 | random | to_uuid }}
+metadata:
+  name: {{ lookup('env', "CLUSTER") }}
+compute:
+- hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 2
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+networking:
+  clusterNetwork:
+  - cidr: 192.168.0.0/17
+    hostPrefix: 23
+  machineCIDR: 192.168.128.0/17
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  ovirt:
+    api_vip: 10.46.8.230
+    dns_vip: 10.46.8.231
+    ingress_vip: 10.46.8.232
+    ovirt_cluster_id: 5c8f6906-f14b-43ee-83df-5f800f36eb70
+    ovirt_storage_domain_id: d787bf6b-fae1-4a3e-b773-2ac466599d29
+pullSecret: |
+  {{ lookup('file', "pull_secret.json") | indent(2) }}
+sshKey: |
+  {{ lookup('file', "ssh-publickey") | indent(2) }}
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  MIID5zCCAs+gAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwVDELMAkGA1UEBhMCVVMxGzAZBgNVBAoM
+  EnVzZXJzeXMucmVkaGF0LmNvbTEoMCYGA1UEAwwfcmdvbGFuLnVzZXJzeXMucmVkaGF0LmNvbS43
+  MjQwNzAeFw0xOTExMDIwODUzMDRaFw0yOTEwMzEwODUzMDRaMFQxCzAJBgNVBAYTAlVTMRswGQYD
+  VQQKDBJ1c2Vyc3lzLnJlZGhhdC5jb20xKDAmBgNVBAMMH3Jnb2xhbi51c2Vyc3lzLnJlZGhhdC5j
+  b20uNzI0MDcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCyqtc7rj5JNSl96hhuAQwd
+  zG02hh+CjLXCEB+ja1bC+GTp2lmCYS8y9o5ddFSwNNc5W7wHs/meTAjoSgHbt0lb/cUwDwvZKIjn
+  yAVgCYVw3TglBNb0lN/S9be7rnFwCdUFqHKRJczoupVeKy6JHCt2aIz/Hfg6KykuwE8ti3D3jJDi
+  VArgtR2y/cU15xGTaZeJASUG53+0fPjyuZGM8CPBYp3wdBXlpaur214IpwE5sFymwJ16wocbf70O
+  uB9j/2zAZRw8nVW6YCIu4rY6eh4NRil5XQb19Wz2d/xeYVPuuCMzBOPOXW1DQxrMqFDE28oZHz30
+  3i8Tcc5TE83J/GYvAgMBAAGjgcIwgb8wHQYDVR0OBBYEFPwEG1GO0W4vnpkEsNyRDUtyKTTuMH0G
+  A1UdIwR2MHSAFPwEG1GO0W4vnpkEsNyRDUtyKTTuoVikVjBUMQswCQYDVQQGEwJVUzEbMBkGA1UE
+  CgwSdXNlcnN5cy5yZWRoYXQuY29tMSgwJgYDVQQDDB9yZ29sYW4udXNlcnN5cy5yZWRoYXQuY29t
+  LjcyNDA3ggIQADAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjANBgkqhkiG9w0BAQsF
+  AAOCAQEAnoeT4no531U8f5BTPYWDvNPFcGP8tYCbSyatIb8Vbgtv0nAre05Mwvlaz4fvjHa14nag
+  +EGjXqLxdvF5pVJrCsSoiYPJ2tt5J5vSDaax3jzZ/t9kFDQAqWrnh7dCvXDgNTROE5qNUrTTH1ws
+  Ru7tHTy4RaYp+DBID6NXLvsHlbT7+lPsXWoYFy4XNK3SCgRJlOi6inkFvBXbdBiCQ4LSS5RMOE3I
+  R7hWbiU7a5uJGGE+cRgpXMEFWshLmQxZr0sl44OUut6xZKhteDYwX8kJtpAwGnj5/u++1dTfKLKT
+  tl7f9CfU7VrHbtA0qhr3nEUdRDxwd3VhHgJfFSnUWeJnPQ==
+  -----END CERTIFICATE-----
