@@ -1,8 +1,17 @@
+# Pull secrets
 pull_secret*.json
+auth_ci.json
+
+# Platforms
 .aws/
 .gcp/
+.openstack/
+.ovirt/
+
+# ssh keys
 ssh-publickey
 ssh-privatekey
+
+# clusters
 clusters/
 install-config.yaml
-test-artifacts/
