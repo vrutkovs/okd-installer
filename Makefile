@@ -25,7 +25,7 @@ VERSION=4.4
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:installer
 CLI_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:cli
-
+PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
