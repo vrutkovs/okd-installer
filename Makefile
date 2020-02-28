@@ -16,34 +16,16 @@ PODMAN_TF=${PODMAN} run --privileged --rm \
 			-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 			-e AWS_DEFAULT_REGION=us-east-1 \
 			-ti ${TERRAFORM_IMAGE}
-TESTS_PARAMS=\
-		-v $(shell pwd)/ssh-privatekey:/root/ssh-privatekey \
-		-v $(shell pwd)/.aws/credentials:/tmp/artifacts/installer/.aws/credentials \
-		-v $(shell pwd)/clusters/${CLUSTER}/auth:/tmp/artifacts/installer/auth${MOUNT_FLAGS} \
-		-v $(shell pwd)/test-artifacts/${CLUSTER}:/tmp/artifacts/cluster \
-		-e KUBECONFIG=/tmp/artifacts/installer/auth/kubeconfig \
-		-e KUBE_SSH_KEY_PATH=/root/ssh-privatekey \
-		-e AWS_SHARED_CREDENTIALS_FILE=/tmp/artifacts/installer/.aws/credentials \
-		-e CLUSTER_NAME=${CLUSTER} \
-		-e BASE_DOMAIN=${BASE_DOMAIN}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
 VERSION=4.4
-INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:installer
-LIBVIR_INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:libvirt-installer
-ANSIBLE_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:ansible
-TESTS_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:tests
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
+INSTALLER_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:installer
 CLI_IMAGE=registry.svc.ci.openshift.org/${TYPE}/${VERSION}:cli
 
-TF_DIR=tf
-ADDITIONAL_PARAMS=  -e OPTS="-vvv" \
-					-e PLAYBOOK_FILE=test/aws/scaleup.yml \
-					-e INVENTORY_DIR=/usr/share/ansible/openshift-ansible/inventory/dynamic/aws
-PYTHON=/usr/bin/python3
 ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
@@ -51,15 +33,11 @@ ifneq ("$(LATEST_RELEASE)","")
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
-	VERSION=4.1
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.1.6
+	VERSION=4.3
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.3.3
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
-endif
-ANSIBLE_REPO=
-ifneq ("$(ANSIBLE_REPO)","")
-	ANSIBLE_MOUNT_OPTS=-v ${ANSIBLE_REPO}:/usr/share/ansible/openshift-ansible${MOUNT_FLAGS}
 endif
 
 all: help
@@ -87,34 +65,6 @@ cleanup: ## Remove remaining installer bits
 
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull --authfile $(shell pwd)/pull_secret.json ${INSTALLER_IMAGE}
-
-okd: check pull-installer ## Create OKD cluster on AWS
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
-	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
-
-okd-libvirt: check ## Create OKD cluster on AWS
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN} pull ${LIBVIR_INSTALLER_IMAGE}
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
-	  --entrypoint=sh \
-	  -ti ${LIBVIR_INSTALLER_IMAGE} -c "/bin/openshift-install create cluster ${LOG_LEVEL_ARGS} --dir /output"
-
-okd-upi: check pull-installer ## Create OKD cluster on AWS
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} ${ANSIBLE} -m template -a "src=install-config.aws-okd.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-	  -v /var/home/vrutkovs/src/github.com/openshift/installer/bin/openshift-install:/bin/openshift-install \
-	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create ignition-configs ${LOG_LEVEL_ARGS} --dir /output
 
 aws: check pull-installer ## Create AWS cluster
 	mkdir -p clusters/${CLUSTER}/.ssh
@@ -184,61 +134,5 @@ update-cli: ## Update CLI image
 	  --entrypoint=sh \
 	  -ti ${CLI_IMAGE} \
 	  -c "cp /usr/bin/oc /host/bin/oc"
-
-pull-ansible-image: ## Pull latest openshift-ansible container
-	${PODMAN} pull ${ANSIBLE_IMAGE}
-
-scaleup: check ## Scaleup AWS workers
-ifndef ANSIBLE_REPO
-	$(error Location of the ansible repo is not set)
-endif
-	rm -rf /tmp/ansible; mkdir /tmp/ansible
-	${PODMAN_RUN} \
-	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/clusters/${CLUSTER}:/cluster \
-	  -v $(shell pwd)/pull_secret.json:/opt/app-root/src/pull-secret.txt \
-	  -v /tmp/ansible:/opt/app-root/src/.ansible \
-	  ${ADDITIONAL_PARAMS} \
-	  -ti ${ANSIBLE_IMAGE}
-
-scaleup-shell: check ## Run shell in scaleup image
-	rm -rf /tmp/ansible; mkdir /tmp/ansible
-	${PODMAN_RUN} \
-	  ${ANSIBLE_MOUNT_OPTS} \
-	  -v $(shell pwd)/clusters/${CLUSTER}:/cluster \
-	  -v $(shell pwd)/pull_secret.json:/cluster/pull_secret.json \
-	  -v /tmp/ansible:/opt/app-root/src/ \
-	  ${ADDITIONAL_PARAMS} \
-	  --entrypoint=sh \
-	  -ti ${ANSIBLE_IMAGE}
-
-pull-tests: ## Pull test image
-	${PODMAN} pull ${TESTS_IMAGE}
-
-tests: ## Run openshift tests
-	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
-	${PODMAN_RUN} \
-	  ${ANSIBLE_MOUNT_OPTS} \
-		${TESTS_PARAMS} \
-		-v /home/vrutkovs/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
-	  -ti ${TESTS_IMAGE} sh
-
-tests-restore-snapshot:
-	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
-	${PODMAN_RUN} \
-	  ${TESTS_PARAMS} \
-	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
-	  -e TEST_SUITE=openshift/conformance/parallel \
-	  -ti ${TESTS_IMAGE} \
-	  openshift-tests run-dr restore-snapshot -o /tmp/artifacts/cluster/e2e.log --junit-dir /tmp/artifacts/cluster/junit
-
-tests-quorum-restore:
-	rm -rf test-artifacts/${CLUSTER}; mkdir -p test-artifacts/${CLUSTER}
-	${PODMAN_RUN} \
-	  ${TESTS_PARAMS} \
-	  -v /home/vrutkovs/go/src/github.com/openshift/origin/_output/local/bin/linux/amd64/openshift-tests:/usr/bin/openshift-tests \
-	  -e TEST_SUITE=openshift/conformance/parallel \
-	  -ti ${TESTS_IMAGE} \
-	  openshift-tests run-dr quorum-restore -o /tmp/artifacts/cluster/e2e.log --junit-dir /tmp/artifacts/cluster/junit
 
 .PHONY: all $(MAKECMDGOALS)
