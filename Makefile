@@ -118,6 +118,17 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
+openstack: check pull-installer ## Create OKD cluster on Openstack
+	mkdir -p clusters/${CLUSTER}/.ssh
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	env CLUSTER=${CLUSTER} BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.openstack.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+		-e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
+ 	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fedora-coreos-31.20200113.3.1" \
+	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+
+
 destroy-vsphere: ## Destroy vsphere cluster
 	${PODMAN_TF} destroy -auto-approve
 	make cleanup
