@@ -66,10 +66,16 @@ cleanup: ## Remove remaining installer bits
 pull-installer: ## Pull fresh installer image
 	${PODMAN} pull --authfile $(shell pwd)/pull_secret.json ${INSTALLER_IMAGE}
 
+create-config: ## Create install-config.yaml
+	env CLUSTER=${CLUSTER} \
+	    ${ANSIBLE} -m template \
+	    -a "src=${TEMPLATE} dest=clusters/${CLUSTER}/install-config.yaml"
+	cp -rf clusters/${CLUSTER}/install-config.{,copy.}yaml
+
 aws: check pull-installer ## Create AWS cluster
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.aws.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	make create-config TEMPLATE=install-config.aws.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 		-e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
@@ -79,22 +85,16 @@ aws: check pull-installer ## Create AWS cluster
 gcp: check pull-installer ## Create GCP cluster
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} BASE_DOMAIN=${GCE_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.gcp.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	make create-config TEMPLATE=install-config.gcp.yaml.j2 BASE_DOMAIN=${GCE_BASE_DOMAIN}
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
 	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
-watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
-	curl -Lvs --insecure \
-	  --cert clusters/${CLUSTER}/tls/journal-gatewayd.crt \
-	  --key clusters/${CLUSTER}/tls/journal-gatewayd.key \
-	  "https://api.${CLUSTER}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
-
 vsphere: check pull-installer ## Create vsphere cluster
 	${PODMAN_INSTALLER} version
-	${ANSIBLE} -m template -a "src=install-config.vsphere.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	make create-config TEMPLATE=install-config.vsphere.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	${PODMAN_INSTALLER} create ignition-configs --dir /output
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
@@ -111,7 +111,7 @@ patch-vsphere: ## Various configs
 ovirt: check pull-installer ## Create OKD cluster on oVirt
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} BASE_DOMAIN=${AWS_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.ovirt.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	make create-config TEMPLATE=install-config.ovirt.yaml.j2
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fcos-31" \
 	  -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS} \
@@ -121,7 +121,7 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 openstack: check pull-installer ## Create OKD cluster on Openstack
 	mkdir -p clusters/${CLUSTER}/.ssh
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	env CLUSTER=${CLUSTER} BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN} ${ANSIBLE} -m template -a "src=install-config.openstack.yaml.j2 dest=clusters/${CLUSTER}/install-config.yaml"
+	make create-config TEMPLATE=install-config.openstack.yaml.j2 BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 		-e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
  	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fedora-coreos-31.20200113.3.1" \
@@ -168,5 +168,12 @@ update-cli: ## Update CLI image
 	  --entrypoint=sh \
 	  -ti ${CLI_IMAGE} \
 	  -c "cp /usr/bin/oc /host/bin/oc"
+
+
+watch-bootstrap: ## Watch bootstrap logs via journal-gatewayd
+	curl -Lvs --insecure \
+	  --cert clusters/${CLUSTER}/tls/journal-gatewayd.crt \
+	  --key clusters/${CLUSTER}/tls/journal-gatewayd.key \
+	  "https://api.${CLUSTER}.${BASE_DOMAIN}:19531/entries?follow&_SYSTEMD_UNIT=bootkube.service"
 
 .PHONY: all $(MAKECMDGOALS)
