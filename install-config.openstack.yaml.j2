@@ -3,13 +3,6 @@ baseDomain: vrutkovs.eu
 clusterID: {{ 99999999 | random | to_uuid }}
 metadata:
   name: {{ lookup('env', "CLUSTER") }}
-#controlPlane:
-#  name: master
-#  platform:
-#    openstack:
-#      rootVolume:
-#        size: 25
-#        type: performance
 platform:
   openstack:
     cloud:           shiftstack
