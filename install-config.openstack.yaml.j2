@@ -6,17 +6,19 @@ metadata:
 platform:
   openstack:
     cloud:           shiftstack
-    externalNetwork: provider_net_ocp_dev
+    externalNetwork: provider_net_shared_3
     computeFlavor:   m1.xlarge
-    lbFloatingIP:    10.0.118.19
+    lbFloatingIP:    10.0.109.18
 networking:
-  clusterNetwork:
-  - cidr: 10.128.0.0/14
-    hostPrefix: 23
   machineCIDR: 10.0.128.0/17
-  serviceNetwork:
-  - 172.30.0.0/16
   networkType: OVNKubernetes
+imageContentSources:
+- mirrors:
+  - quay.io/vrutkovs/okd-release
+  source: registry.svc.ci.openshift.org/origin/4.4-2020-02-28-211838
+- mirrors:
+  - quay.io/vrutkovs/okd-release
+  source: registry.svc.ci.openshift.org/origin/release
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
