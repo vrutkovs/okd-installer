@@ -6,16 +6,16 @@ MOUNT_FLAGS=
 TYPE=origin
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
-			-v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
-			--userns=keep-id
+  -v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
+  --userns=keep-id
 PODMAN_TF=${PODMAN} run --privileged --rm \
-			--userns=keep-id \
-			--workdir=/${TF_DIR} \
-			-v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} \
-			-v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-			-e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-			-e AWS_DEFAULT_REGION=us-east-1 \
-			-ti ${TERRAFORM_IMAGE}
+  --userns=keep-id \
+  --workdir=/${TF_DIR} \
+  -v $(shell pwd)/${TF_DIR}:/${TF_DIR}${MOUNT_FLAGS} \
+  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+  -e AWS_DEFAULT_REGION=us-east-1 \
+  -ti ${TERRAFORM_IMAGE}
 PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 
 LOG_LEVEL=info
@@ -68,8 +68,8 @@ pull-installer: ## Pull fresh installer image
 
 create-config: ## Create install-config.yaml
 	env CLUSTER=${CLUSTER} \
-	    ${ANSIBLE} -m template \
-	    -a "src=${TEMPLATE} dest=clusters/${CLUSTER}/install-config.yaml"
+	  ${ANSIBLE} -m template \
+	  -a "src=${TEMPLATE} dest=clusters/${CLUSTER}/install-config.yaml"
 	cp -rf clusters/${CLUSTER}/install-config.{,copy.}yaml
 
 aws: check pull-installer ## Create AWS cluster
@@ -78,7 +78,7 @@ aws: check pull-installer ## Create AWS cluster
 	make create-config TEMPLATE=install-config.aws.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
-		-e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
+	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
@@ -89,7 +89,7 @@ gcp: check pull-installer ## Create GCP cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
-		-e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="https://storage.googleapis.com/walters-rhcos-test/fedora-coreos/fedora-coreos-31-20200127-dev-3-gcp-x86-64.tar.gz" \
+	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="https://storage.googleapis.com/walters-rhcos-test/fedora-coreos/fedora-coreos-31-20200127-dev-3-gcp-x86-64.tar.gz" \
 	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
@@ -124,14 +124,14 @@ openstack: check pull-installer ## Create OKD cluster on Openstack
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	make create-config TEMPLATE=install-config.openstack.yaml.j2 BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-		-e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
- 	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fedora-coreos-31.20200113.3.1" \
+	  -e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
+	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fedora-coreos-31.20200113.3.1" \
 	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
 
 destroy-openstack: ## Destroy openstack cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-		-e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
+	  -e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
 	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
@@ -157,8 +157,8 @@ destroy-aws: ## Destroy AWS cluster
 
 destroy-gcp: ## Destroy GCP cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
-		-e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
-		-v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
+	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
+	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 
