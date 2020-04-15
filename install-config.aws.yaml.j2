@@ -5,8 +5,8 @@ metadata:
   name: {{ lookup('env', "CLUSTER") }}
 platform:
   aws:
-    region: eu-central-1
+    region: eu-west-1
 pullSecret: |
-  {{ lookup('file', "pull_secret_minimal.json") | indent(2) }}
+  {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
   {{ lookup('file', "ssh-publickey") | indent(2) }}

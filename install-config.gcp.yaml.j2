@@ -6,7 +6,7 @@ metadata:
 platform:
   gcp:
     projectID: openshift-gce-devel
-    region: europe-west3
+    region: europe-west1
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
