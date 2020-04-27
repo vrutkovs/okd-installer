@@ -5,7 +5,16 @@ metadata:
   name: {{ lookup('env', "CLUSTER") }}
 platform:
   aws:
-    region: eu-west-1
+    region: eu-central-1
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 1
+  platform:
+    aws:
+      type: m5.2xlarge
 pullSecret: |
   {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |

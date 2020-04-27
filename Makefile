@@ -73,9 +73,15 @@ create-config: ## Create install-config.yaml
 	cp -rf clusters/${CLUSTER}/install-config.{,copy.}yaml
 
 aws: check pull-installer ## Create AWS cluster
-	mkdir -p clusters/${CLUSTER}/.ssh
+	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	make create-config TEMPLATE=install-config.aws.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
+	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} create manifests ${LOG_LEVEL_ARGS} --dir /output
+	cp -rvf manifests/singlenode/* clusters/${CLUSTER}/openshift
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
