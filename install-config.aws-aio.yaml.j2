@@ -4,10 +4,18 @@ clusterID: {{ 99999999 | random | to_uuid }}
 metadata:
   name: {{ lookup('env', "CLUSTER") }}
 platform:
-  gcp:
-    projectID: openshift-gce-devel
-    region: europe-west1
+  aws:
+    region: eu-central-1
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 1
+  platform:
+    aws:
+      type: m5.2xlarge
 pullSecret: |
-  {{ lookup('file', "pull_secret_minimal.json") | indent(2) }}
+  {{ lookup('file', "pull_secret.json") | indent(2) }}
 sshKey: |
   {{ lookup('file', "ssh-publickey") | indent(2) }}

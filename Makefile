@@ -3,6 +3,8 @@
 AWS_BASE_DOMAIN=devcluster.openshift.com
 GCE_BASE_DOMAIN=origin-gce.dev.openshift.com
 MOUNT_FLAGS=
+INSTALLER_PARAMS=
+MANIFESTS=
 TYPE=origin
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
@@ -72,29 +74,44 @@ create-config: ## Create install-config.yaml
 	  -a "src=${TEMPLATE} dest=clusters/${CLUSTER}/install-config.yaml"
 	cp -rf clusters/${CLUSTER}/install-config.{,copy.}yaml
 
-aws: check pull-installer ## Create AWS cluster
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=install-config.aws.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
+copy-manifests: ## Copy manifests from manifests/ dir
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -ti ${INSTALLER_IMAGE} create manifests ${LOG_LEVEL_ARGS} --dir /output
+ifneq ("$(MANIFESTS)","")
+	cp -rvf manifests/${MANIFESTS}/* clusters/${CLUSTER}/openshift
+endif
+
+aws: check pull-installer ## Create AWS cluster
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
-	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS})
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+aws: TEMPLATE?=install-config.aws.yaml.j2
 
 gcp: check pull-installer ## Create GCP cluster
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=install-config.gcp.yaml.j2 BASE_DOMAIN=${GCE_BASE_DOMAIN}
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
-	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS})
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${GCE_BASE_DOMAIN}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+gcp: TEMPLATE?=install-config.gcp.yaml.j2
 
 vsphere: check pull-installer ## Create vsphere cluster
+	TEMPLATE ?= install-config.vsphere.yaml.j2
 	${PODMAN_INSTALLER} version
-	make create-config TEMPLATE=install-config.vsphere.yaml.j2 BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make copy-manifests
 	${PODMAN_INSTALLER} create ignition-configs --dir /output
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
 	${PODMAN_TF} init
@@ -109,24 +126,31 @@ patch-vsphere: ## Various configs
 	oc patch configs.imageregistry.operator.openshift.io cluster --type=merge --patch '{"spec": {"storage": {"filesystem": {"volumeSource": {"emptyDir": {}}}}}}'
 
 ovirt: check pull-installer ## Create OKD cluster on oVirt
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=install-config.ovirt.yaml.j2
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fcos-31" \
 	  -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS} \
-	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS})
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+ovirt: TEMPLATE?=install-config.ovirt.yaml.j2
 
 openstack: check pull-installer ## Create OKD cluster on Openstack
-	mkdir -p clusters/${CLUSTER}/.ssh
-	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=install-config.openstack.yaml.j2 BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
-	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
 	  -e OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE="fedora-coreos-31.20200113.3.1" \
-	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS} \
-	  -ti ${INSTALLER_IMAGE} create cluster ${LOG_LEVEL_ARGS} --dir /output
+	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS})
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+openstack: TEMPLATE?=install-config.openstack.yaml.j2
+
 
 destroy-openstack: ## Destroy openstack cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
