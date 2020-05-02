@@ -87,7 +87,7 @@ spec:
               optional: true
         - name: "CNI_CONF_NAME"
           value: "75-cilium.conf"
-        image: "docker.io/cilium/cilium:v1.7.1"
+        image: "docker.io/cilium/cilium:v1.7.3"
         imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
@@ -150,7 +150,7 @@ spec:
               key: wait-bpf-mount
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:v1.7.1"
+        image: "docker.io/cilium/cilium:v1.7.3"
         imagePullPolicy: IfNotPresent
         name: clean-cilium-state
         securityContext:

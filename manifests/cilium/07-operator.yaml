@@ -108,7 +108,7 @@ spec:
               key: identity-allocation-mode
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/operator:v1.7.1"
+        image: "docker.io/cilium/operator:v1.7.3"
         imagePullPolicy: IfNotPresent
         name: cilium-operator
         livenessProbe:
