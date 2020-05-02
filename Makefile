@@ -6,6 +6,7 @@ MOUNT_FLAGS=
 INSTALLER_PARAMS=
 MANIFESTS=
 TYPE=origin
+PULL_SECRET=pull_secret.json
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
   -v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
@@ -52,21 +53,18 @@ check: ## Verify all necessary files exist
 ifndef CLUSTER
 CLUSTER := ${USERNAME}
 endif
-ifeq (,$(wildcard ./pull_secret.json))
-	$(error "pull_secret.json not found!")
+ifeq (,$(wildcard ./${PULL_SECRET}))
+	$(error "${PULL_SECRET} not found!")
 endif
 ifeq (,$(wildcard ./ssh-publickey))
 	$(error "./ssh-publickey secret not found!")
-endif
-ifeq (,$(wildcard ./.aws/credentials))
-	$(error "./aws/credentials secret not found!")
 endif
 
 cleanup: ## Remove remaining installer bits
 	rm -rf clusters/${CLUSTER}; rm -rf test-artifacts/${CLUSTER} || true
 
 pull-installer: ## Pull fresh installer image
-	${PODMAN} pull --authfile $(shell pwd)/pull_secret.json ${INSTALLER_IMAGE}
+	${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
 
 create-config: ## Create install-config.yaml
 	env CLUSTER=${CLUSTER} \
@@ -88,7 +86,7 @@ aws: check pull-installer ## Create AWS cluster
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
@@ -101,7 +99,7 @@ gcp: check pull-installer ## Create GCP cluster
 	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${GCE_BASE_DOMAIN}
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${GCE_BASE_DOMAIN}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
@@ -110,7 +108,7 @@ gcp: TEMPLATE?=install-config.gcp.yaml.j2
 vsphere: check pull-installer ## Create vsphere cluster
 	TEMPLATE ?= install-config.vsphere.yaml.j2
 	${PODMAN_INSTALLER} version
-	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	make copy-manifests
 	${PODMAN_INSTALLER} create ignition-configs --dir /output
 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
@@ -132,7 +130,7 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 	  -v $(shell pwd)/.ovirt:/output/.ovirt/${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=${TEMPLATE}
+	make create-config PULL_SECRET=${PULL_SECRET} TEMPLATE=${TEMPLATE}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
@@ -145,7 +143,7 @@ openstack: check pull-installer ## Create OKD cluster on Openstack
 	  -v $(shell pwd)/.openstack:/tmp/.config/openstack${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=${TEMPLATE} BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
+	make create-config PULL_SECRET=${PULL_SECRET} TEMPLATE=${TEMPLATE} BASE_DOMAIN=${OPENSTACK_BASE_DOMAIN}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output

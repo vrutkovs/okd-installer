@@ -16,6 +16,6 @@ controlPlane:
     aws:
       type: m5.2xlarge
 pullSecret: |
-  {{ lookup('file', "pull_secret.json") | indent(2) }}
+  {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
 sshKey: |
   {{ lookup('file', "ssh-publickey") | indent(2) }}
