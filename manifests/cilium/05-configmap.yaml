@@ -115,7 +115,7 @@ data:
   enable-xt-socket-fallback: "true"
   install-iptables-rules: "true"
   auto-direct-node-routes: "false"
-  kube-proxy-replacement:  "partial"
+  kube-proxy-replacement: "strict"
   enable-host-reachable-services: "false"
   enable-external-ips: "false"
   enable-node-port: "false"
