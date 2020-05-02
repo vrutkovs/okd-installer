@@ -118,6 +118,9 @@ spec:
         - mountPath: /tmp/cilium/config-map
           name: cilium-config-path
           readOnly: true
+        - mountPath: /tmp/cni-configuration
+          name: cni-configuration
+          readOnly: true
           # Needed to be able to load kernel modules
         - mountPath: /lib/modules
           name: lib-modules
@@ -205,6 +208,9 @@ spec:
       - configMap:
           name: cilium-config
         name: cilium-config-path
+      - configMap:
+          name: cni-configuration
+        name: cni-configuration
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2

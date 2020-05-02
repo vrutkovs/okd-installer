@@ -7,14 +7,6 @@ platform:
   gcp:
     projectID: openshift-gce-devel
     region: europe-west1
-networking:
-  clusterNetwork:
-  - cidr: 10.128.0.0/14
-    hostPrefix: 23
-  machineCIDR: 10.0.0.0/16
-  serviceNetwork:
-  - 172.30.0.0/16
-  networkType: none
 pullSecret: |
   {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
 sshKey: |
