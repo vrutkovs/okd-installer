@@ -85,7 +85,7 @@ data:
   #   - disabled
   #   - vxlan (default)
   #   - geneve
-  tunnel: vxlan
+  tunnel: disabled
 
   # DNS Polling periodically issues a DNS lookup for each `matchName` from
   # cilium-agent. The result is used to regenerate endpoint policy.
@@ -111,7 +111,7 @@ data:
   # wait-bpf-mount makes init container wait until bpf filesystem is mounted
   wait-bpf-mount: "true"
 
-  masquerade: "true"
+  masquerade: "false"
   enable-xt-socket-fallback: "true"
   install-iptables-rules: "true"
   auto-direct-node-routes: "false"
