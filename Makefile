@@ -64,7 +64,7 @@ cleanup: ## Remove remaining installer bits
 	rm -rf clusters/${CLUSTER}; rm -rf test-artifacts/${CLUSTER} || true
 
 pull-installer: ## Pull fresh installer image
-	${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
+	#${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
 
 create-config: ## Create install-config.yaml
 	env CLUSTER=${CLUSTER} \
@@ -136,6 +136,15 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 ovirt: TEMPLATE?=install-config.ovirt.yaml.j2
 
+libvirt: check pull-installer ## Create libvirt cluster
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+libvirt: TEMPLATE?=install-config.libvirt.yaml.j2
+
 openstack: check pull-installer ## Create OKD cluster on Openstack
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e OS_CLIENT_CONFIG_FILE=/tmp/.config/openstack/clouds.yaml \
@@ -148,7 +157,6 @@ openstack: check pull-installer ## Create OKD cluster on Openstack
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 openstack: TEMPLATE?=install-config.openstack.yaml.j2
-
 
 destroy-openstack: ## Destroy openstack cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
@@ -180,6 +188,11 @@ destroy-gcp: ## Destroy GCP cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS} \
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
+	make cleanup
+
+destroy-libvirt: ## Destroy libvirt cluster
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 
