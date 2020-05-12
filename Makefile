@@ -137,6 +137,7 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 ovirt: TEMPLATE?=install-config.ovirt.yaml.j2
 
 libvirt: check pull-installer ## Create libvirt cluster
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET}
