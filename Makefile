@@ -141,6 +141,7 @@ libvirt: check pull-installer ## Create libvirt cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	sed -i 's;domainMemory: .*;domainMemory: 8192;g' clusters/${CLUSTER}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 libvirt: TEMPLATE?=install-config.libvirt.yaml.j2
