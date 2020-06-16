@@ -64,7 +64,7 @@ cleanup: ## Remove remaining installer bits
 	rm -rf clusters/${CLUSTER}; rm -rf test-artifacts/${CLUSTER} || true
 
 pull-installer: ## Pull fresh installer image
-	#${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
+	${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
 
 create-config: ## Create install-config.yaml
 	env CLUSTER=${CLUSTER} \
