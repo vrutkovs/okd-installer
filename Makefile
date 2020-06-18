@@ -105,7 +105,22 @@ gcp: check pull-installer ## Create GCP cluster
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 gcp: TEMPLATE?=install-config.gcp.yaml.j2
 
-vsphere: check pull-installer ## Create vsphere cluster
+vsphere: check pull-installer ## Create vSphere cluster
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
+	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
+	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	  -v $(shell pwd)/.vsphere:/etc/pki/ca-trust${MOUNT_FLAGS})
+	mkdir -p clusters/${CLUSTER}
+	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} --entrypoint=sh --user=0 -ti ${INSTALLER_IMAGE} -c "update-ca-trust extract"
+	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
+	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+vsphere: TEMPLATE?=install-config.vsphere.yaml.j2
+
+vsphere-upi: check pull-installer ## Create vsphere UPI cluster
 	TEMPLATE ?= install-config.vsphere.yaml.j2
 	${PODMAN_INSTALLER} version
 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
@@ -117,6 +132,7 @@ vsphere: check pull-installer ## Create vsphere cluster
 	${PODMAN_INSTALLER} wait-for bootstrap-complete ${LOG_LEVEL_ARGS} --dir /output
 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
 	${PODMAN_INSTALLER} wait-for install-complete ${LOG_LEVEL_ARGS} --dir /output
+vsphere-upi: TEMPLATE?=install-config.vsphere.yaml.j2
 
 patch-vsphere: ## Various configs
 	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
@@ -174,7 +190,7 @@ destroy-ovirt: ## Destroy ovirt cluster
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 
-destroy-vsphere: ## Destroy vsphere cluster
+destroy-vsphere-upi: ## Destroy vsphere cluster
 	${PODMAN_TF} destroy -auto-approve
 	make cleanup
 	git clean tf/ -fx
@@ -195,6 +211,15 @@ destroy-gcp: ## Destroy GCP cluster
 
 destroy-libvirt: ## Destroy libvirt cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
+	make cleanup
+
+destroy-vsphere: ## Destroy vSphere IPI cluster
+	${PODMAN_RUN} ${INSTALLER_PARAMS} \
+	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
+	  -e BASE_DOMAIN=${AWS_BASE_DOMAIN} \
+	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
+	  -v $(shell pwd)/.vsphere:/etc/pki/ca-trust${MOUNT_FLAGS} \
 	  -ti ${INSTALLER_IMAGE} destroy cluster ${LOG_LEVEL_ARGS} --dir /output
 	make cleanup
 

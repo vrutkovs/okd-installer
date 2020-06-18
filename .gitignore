@@ -7,6 +7,7 @@ auth_ci.json
 .gcp/
 .openstack/
 .ovirt/
+.vsphere/
 
 # ssh keys
 ssh-publickey

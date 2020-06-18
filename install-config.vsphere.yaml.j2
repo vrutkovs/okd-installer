@@ -5,6 +5,16 @@ metadata:
   name: {{ lookup('env', "USERNAME") }}
 networking:
   machineCIDR: "139.178.89.192/26"
+compute:
+- hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 2
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
 platform:
   vsphere:
     vCenter: vcsa.vmware.devcluster.openshift.com
@@ -12,6 +22,10 @@ platform:
     password: {{ lookup('env', "VSPHERE_PASSWORD") }}
     datacenter: dc1
     defaultDatastore: nvme-ds1
+    apiVIP: {{ lookup('env', "VSPHERE_APIVIP") }}
+    ingressVIP: {{ lookup('env', "VSPHERE_INGRESSVIP") }}
+    cluster: devel
+    network: "VM Network"
 pullSecret: |
   {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
 sshKey: |
