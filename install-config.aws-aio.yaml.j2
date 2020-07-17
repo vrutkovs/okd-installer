@@ -14,7 +14,7 @@ controlPlane:
   replicas: 1
   platform:
     aws:
-      type: m5.2xlarge
+      type: m5.xlarge
 pullSecret: |
   {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
 sshKey: |
