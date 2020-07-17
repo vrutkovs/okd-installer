@@ -1,0 +1,24 @@
+apiVersion: v1
+baseDomain: {{ lookup('env', "BASE_DOMAIN") }}
+clusterID: {{ 99999999 | random | to_uuid }}
+metadata:
+  name: {{ lookup('env', "CLUSTER") }}
+platform:
+  gcp:
+    projectID: openshift-gce-devel
+    region: europe-west3
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 1
+  platform:
+    gcp:
+      type: n2-highcpu-16
+      osDisk:
+        diskSizeGB: 32
+pullSecret: |
+  {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
+sshKey: |
+  {{ lookup('file', "ssh-publickey") | indent(2) }}

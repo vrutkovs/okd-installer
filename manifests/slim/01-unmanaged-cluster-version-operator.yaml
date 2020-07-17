@@ -1,0 +1,11 @@
+apiVersion: config.openshift.io/v1
+kind: ClusterVersion
+metadata:
+  name: version
+spec:
+  overrides:
+    - group: apps/v1
+      kind: Deployment
+      name: cluster-monitoring-operator
+      namespace: openshift-monitoring
+      unmanaged: true
