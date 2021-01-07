@@ -15,10 +15,10 @@ networking:
 imageContentSources:
 - mirrors:
   - quay.io/vrutkovs/okd-release
-  source: registry.svc.ci.openshift.org/origin/4.4-2020-02-28-211838
+  source: registry.ci.openshift.org/origin/4.4-2020-02-28-211838
 - mirrors:
   - quay.io/vrutkovs/okd-release
-  source: registry.svc.ci.openshift.org/origin/release
+  source: registry.ci.openshift.org/origin/release
 pullSecret: |
   {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
 sshKey: |
