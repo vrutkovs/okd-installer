@@ -15,4 +15,4 @@ oc get "mc/${MC}" -o yaml > /tmp/mc.yaml
 oc annotate "node/${NODE}" "machineconfiguration.openshift.io/desiredConfig"="${MC}" --overwrite
 
 # Pivot to new machine config and reboot
-machine-config-daemon start --root-mount=/ --node-name="${NODE}" --once-from /tmp/mc.yaml
+/run/bin/machine-config-daemon start --root-mount=/ --node-name="${NODE}" --once-from /tmp/mc.yaml
