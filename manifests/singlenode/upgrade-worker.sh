@@ -5,7 +5,7 @@
 set -x
 
 # Get master node name
-NODE=$(oc get node -l node-role.kubernetes.io/master= -o=jsonpath='{.items[*].metadata.name}')
+NODE=$(oc get node -l node-role.kubernetes.io/worker= -o=jsonpath='{.items[*].metadata.name}')
 
 # Fetch expected master config
 MC=$(oc get mcp/master -o=jsonpath='{.spec.configuration.name}')
