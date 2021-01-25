@@ -5,7 +5,7 @@
 set -x
 
 # Fetch expected master config
-MC=$(oc get mcp/master -o=jsonpath='{.spec.configuration.name}')
+MC=$(oc get mcp/worker -o=jsonpath='{.spec.configuration.name}')
 oc get "mc/${MC}" -o yaml > /tmp/mc.yaml
 
 # Annotate the node as if it has succeeded
