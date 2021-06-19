@@ -1,8 +1,5 @@
 apiVersion: v1
 baseDomain: tt.testing
-clusterID: {{ 99999999 | random | to_uuid }}
-metadata:
-  name: {{ lookup('env', "CLUSTER") }}
 platform:
   libvirt:
     URI: qemu+tcp://192.168.122.1/system
@@ -12,7 +9,3 @@ compute:
 controlPlane:
   name: master
   replicas: 1
-pullSecret: |
-  {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
-sshKey: |
-  {{ lookup('file', "ssh-publickey") | indent(2) }}

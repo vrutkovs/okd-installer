@@ -1,8 +1,4 @@
 apiVersion: v1
-baseDomain: metalkube.org
-clusterID: {{ 99999999 | random | to_uuid }}
-metadata:
-  name: {{ lookup('env', "CLUSTER") }}
 compute:
 - hyperthreading: Enabled
   name: worker
@@ -28,10 +24,6 @@ platform:
     ingress_vip: 10.46.8.232
     ovirt_cluster_id: 5c8f6906-f14b-43ee-83df-5f800f36eb70
     ovirt_storage_domain_id: d787bf6b-fae1-4a3e-b773-2ac466599d29
-pullSecret: |
-  {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
-sshKey: |
-  {{ lookup('file', "ssh-publickey") | indent(2) }}
 additionalTrustBundle: |
   -----BEGIN CERTIFICATE-----
   MIID5zCCAs+gAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwVDELMAkGA1UEBhMCVVMxGzAZBgNVBAoM

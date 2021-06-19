@@ -2,11 +2,13 @@
 .DEFAULT_GOAL := help
 AWS_BASE_DOMAIN=devcluster.openshift.com
 GCE_BASE_DOMAIN=origin-gce.dev.openshift.com
+LIBVIRT_BASE_DOMAIN=tt.testing
 MOUNT_FLAGS=
 INSTALLER_PARAMS=
 MANIFESTS=
 TYPE=origin
 PULL_SECRET=pull_secrets/pull_secret.json
+SSH_PUBLICKEY=./ssh-publickey
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
   -v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \
@@ -28,8 +30,7 @@ VERSION=4.7
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 INSTALLER_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:installer
 CLI_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:cli
-PYTHON=/usr/bin/python3
-ANSIBLE=ansible all -i "localhost," --connection=local -e "ansible_python_interpreter=${PYTHON}" -o
+YQ=yq
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
 	RELEASE_IMAGE=registry.ci.openshift.org/${TYPE}/release:${VERSION}
@@ -56,8 +57,8 @@ endif
 ifeq (,$(wildcard ./${PULL_SECRET}))
 	$(error "${PULL_SECRET} not found!")
 endif
-ifeq (,$(wildcard ./ssh-publickey))
-	$(error "./ssh-publickey secret not found!")
+ifeq (,$(wildcard ./${SSH_PUBLICKEY}))
+	$(error "./${SSH_PUBLICKEY} secret not found!")
 endif
 
 cleanup: ## Remove remaining installer bits
@@ -67,10 +68,15 @@ pull-installer: ## Pull fresh installer image
 	${PODMAN} pull --authfile $(shell pwd)/${PULL_SECRET} ${INSTALLER_IMAGE}
 
 create-config: ## Create install-config.yaml
-	env CLUSTER=${CLUSTER} \
-	  ${ANSIBLE} -m template \
-	  -a "src=${TEMPLATE} dest=clusters/${CLUSTER}/install-config.yaml"
-	cp -rf clusters/${CLUSTER}/install-config.{,copy.}yaml
+	cp -rf ${TEMPLATE} ${INSTALL_CONFIG}
+	yq e ".baseDomain = env(BASE_DOMAIN)" -i ${INSTALL_CONFIG}
+	yq e ".metadata.name = env(CLUSTER)" -i ${INSTALL_CONFIG}
+	yq e ".pullSecret = strenv(PULL_SECRET_CONTENTS)" -i ${INSTALL_CONFIG}
+	yq e ".sshKey = strenv(SSH_PUBLICKEY_CONTENTS)" -i ${INSTALL_CONFIG}
+	cp -rf ${INSTALL_CONFIG} ${INSTALL_CONFIG}.copy
+create-config: INSTALL_CONFIG?=clusters/${CLUSTER}/install-config.yaml
+create-config: PULL_SECRET_CONTENTS=$(shell cat ${PULL_SECRET})
+create-config: SSH_PUBLICKEY_CONTENTS=$(shell cat ${SSH_PUBLICKEY})
 
 copy-manifests: ## Copy manifests from manifests/ dir
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
@@ -120,18 +126,18 @@ vsphere: check pull-installer ## Create vSphere cluster
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 vsphere: TEMPLATE?=templates/vsphere.yaml.j2
 
-vsphere-upi: check pull-installer ## Create vsphere UPI cluster
-	${PODMAN_INSTALLER} version
-	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
-	make copy-manifests
-	${PODMAN_INSTALLER} create ignition-configs --dir /output
-	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
-	${PODMAN_TF} init
-	${PODMAN_TF} apply -auto-approve
-	${PODMAN_INSTALLER} wait-for bootstrap-complete ${LOG_LEVEL_ARGS} --dir /output
-	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
-	${PODMAN_INSTALLER} wait-for install-complete ${LOG_LEVEL_ARGS} --dir /output
-vsphere-upi: TEMPLATE?=templates/vsphere.yaml.j2
+# vsphere-upi: check pull-installer ## Create vsphere UPI cluster
+# 	${PODMAN_INSTALLER} version
+# 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
+# 	make copy-manifests
+# 	${PODMAN_INSTALLER} create ignition-configs --dir /output
+# 	${ANSIBLE} -m template -a "src=terraform.tfvars.j2 dest=${TF_DIR}/terraform.tfvars"
+# 	${PODMAN_TF} init
+# 	${PODMAN_TF} apply -auto-approve
+# 	${PODMAN_INSTALLER} wait-for bootstrap-complete ${LOG_LEVEL_ARGS} --dir /output
+# 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
+# 	${PODMAN_INSTALLER} wait-for install-complete ${LOG_LEVEL_ARGS} --dir /output
+# vsphere-upi: TEMPLATE?=templates/vsphere.yaml.j2
 
 patch-vsphere: ## Various configs
 	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
@@ -152,10 +158,12 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 ovirt: TEMPLATE?=templates/ovirt.yaml.j2
 
 libvirt: check pull-installer ## Create libvirt cluster
-	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS})
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
+		-e BASE_DOMAIN=${LIBVIRT_BASE_DOMAIN} \
+		-v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS})
 	mkdir -p clusters/${CLUSTER}
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
-	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET}
+	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${LIBVIRT_BASE_DOMAIN}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	sed -i 's;domainMemory: .*;domainMemory: 8192;g' clusters/${CLUSTER}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \

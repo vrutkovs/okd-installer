@@ -1,12 +1,4 @@
 apiVersion: v1
-baseDomain: {{ lookup('env', "BASE_DOMAIN") }}
-clusterID: {{ 99999999 | random | to_uuid }}
-metadata:
-  name: {{ lookup('env', "CLUSTER") }}
 platform:
   aws:
     region: us-east-2
-pullSecret: |
-  {{ lookup('file', lookup('env', "PULL_SECRET")) | indent(2) }}
-sshKey: |
-  {{ lookup('file', "ssh-publickey") | indent(2) }}
