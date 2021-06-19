@@ -90,7 +90,7 @@ aws: check pull-installer ## Create AWS cluster
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-aws: TEMPLATE?=install-config.aws.yaml.j2
+aws: TEMPLATE?=templates/aws.yaml.j2
 
 gcp: check pull-installer ## Create GCP cluster
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
@@ -103,7 +103,7 @@ gcp: check pull-installer ## Create GCP cluster
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-gcp: TEMPLATE?=install-config.gcp.yaml.j2
+gcp: TEMPLATE?=templates/gcp.yaml.j2
 
 vsphere: check pull-installer ## Create vSphere cluster
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
@@ -118,10 +118,9 @@ vsphere: check pull-installer ## Create vSphere cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} --entrypoint=sh --user=0 -ti ${INSTALLER_IMAGE} -c "update-ca-trust extract"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-vsphere: TEMPLATE?=install-config.vsphere.yaml.j2
+vsphere: TEMPLATE?=templates/vsphere.yaml.j2
 
 vsphere-upi: check pull-installer ## Create vsphere UPI cluster
-	TEMPLATE ?= install-config.vsphere.yaml.j2
 	${PODMAN_INSTALLER} version
 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${AWS_BASE_DOMAIN}
 	make copy-manifests
@@ -132,7 +131,7 @@ vsphere-upi: check pull-installer ## Create vsphere UPI cluster
 	${PODMAN_INSTALLER} wait-for bootstrap-complete ${LOG_LEVEL_ARGS} --dir /output
 	${PODMAN_TF} apply -auto-approve -var 'bootstrap_complete=true'
 	${PODMAN_INSTALLER} wait-for install-complete ${LOG_LEVEL_ARGS} --dir /output
-vsphere-upi: TEMPLATE?=install-config.vsphere.yaml.j2
+vsphere-upi: TEMPLATE?=templates/vsphere.yaml.j2
 
 patch-vsphere: ## Various configs
 	oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config=/$/output/auth/kubeconfig adm certificate approve
@@ -150,7 +149,7 @@ ovirt: check pull-installer ## Create OKD cluster on oVirt
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-ovirt: TEMPLATE?=install-config.ovirt.yaml.j2
+ovirt: TEMPLATE?=templates/ovirt.yaml.j2
 
 libvirt: check pull-installer ## Create libvirt cluster
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} -v $(shell pwd)/.cache:/output/.cache${MOUNT_FLAGS})
@@ -161,7 +160,7 @@ libvirt: check pull-installer ## Create libvirt cluster
 	sed -i 's;domainMemory: .*;domainMemory: 8192;g' clusters/${CLUSTER}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-libvirt: TEMPLATE?=install-config.libvirt.yaml.j2
+libvirt: TEMPLATE?=templates/libvirt.yaml.j2
 
 openstack: check pull-installer ## Create OKD cluster on Openstack
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
@@ -174,7 +173,7 @@ openstack: check pull-installer ## Create OKD cluster on Openstack
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
-openstack: TEMPLATE?=install-config.openstack.yaml.j2
+openstack: TEMPLATE?=templates/openstack.yaml.j2
 
 destroy-openstack: ## Destroy openstack cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
