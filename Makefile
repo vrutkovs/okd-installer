@@ -6,7 +6,7 @@ MOUNT_FLAGS=
 INSTALLER_PARAMS=
 MANIFESTS=
 TYPE=origin
-PULL_SECRET=pull_secret.json
+PULL_SECRET=pull_secrets/pull_secret.json
 PODMAN=podman
 PODMAN_RUN=${PODMAN} run --rm \
   -v $(shell pwd)/clusters/${CLUSTER}:/output${MOUNT_FLAGS} \

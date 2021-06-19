@@ -1,6 +1,5 @@
 # Pull secrets
-pull_secret*.json
-auth_ci.json
+pull_secrets/
 
 # Platforms
 .aws/
