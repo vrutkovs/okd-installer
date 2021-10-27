@@ -3,7 +3,7 @@
 AWS_BASE_DOMAIN=devcluster.openshift.com
 GCE_BASE_DOMAIN=origin-gce.dev.openshift.com
 LIBVIRT_BASE_DOMAIN=tt.testing
-MOUNT_FLAGS=
+MOUNT_FLAGS=:z
 INSTALLER_PARAMS=
 MANIFESTS=
 TYPE=origin
@@ -37,8 +37,8 @@ ifneq ("$(LATEST_RELEASE)","")
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
-	VERSION=4.3
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.3.3
+	VERSION=4.2
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.2.36
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
