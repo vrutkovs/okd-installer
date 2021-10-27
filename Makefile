@@ -26,7 +26,7 @@ PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
-VERSION=4.7
+VERSION=4.8
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 INSTALLER_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:installer
 CLI_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:cli
@@ -37,8 +37,8 @@ ifneq ("$(LATEST_RELEASE)","")
 endif
 OFFICIAL_RELEASE=
 ifneq ("$(OFFICIAL_RELEASE)","")
-	VERSION=4.2
-	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.2.36
+	VERSION=4.3
+	RELEASE_IMAGE=quay.io/openshift-release-dev/ocp-release:4.3.3
 endif
 ifneq ("$(RELEASE_IMAGE)","")
 	INSTALLER_PARAMS=-e OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${RELEASE_IMAGE}
