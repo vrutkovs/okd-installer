@@ -1,0 +1,16 @@
+apiVersion: v1
+platform:
+  gcp:
+    projectID: openshift-gce-devel
+    region: us-east4
+    licenses:
+    - https://compute.googleapis.com/compute/v1/projects/vm-options/global/licenses/enable-vmx
+compute:
+- name: worker
+  replicas: 0
+controlPlane:
+  name: master
+  replicas: 3
+  platform:
+    gcp:
+      type: n1-standard-32
