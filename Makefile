@@ -26,7 +26,7 @@ PODMAN_INSTALLER=${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE}
 LOG_LEVEL=info
 LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
-VERSION=4.10
+VERSION=4.15
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
 INSTALLER_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:installer
 CLI_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:cli
