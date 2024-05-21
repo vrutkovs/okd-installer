@@ -98,7 +98,7 @@ aws: check pull-installer ## Create AWS cluster
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
 aws: TEMPLATE?=templates/aws.yaml.j2
 
-gcp: check pull-installer ## Create GCP cluster
+gcp-createmanifests: check pull-installer
 	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
 	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
 	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
@@ -107,8 +107,18 @@ gcp: check pull-installer ## Create GCP cluster
 	${PODMAN_RUN} -ti ${INSTALLER_IMAGE} version
 	make create-config TEMPLATE=${TEMPLATE} PULL_SECRET=${PULL_SECRET} BASE_DOMAIN=${GCE_BASE_DOMAIN}
 	make copy-manifests "INSTALLER_PARAMS=${INSTALLER_PARAMS}"
+gcp-createmanifests: TEMPLATE?=templates/gcp.yaml.j2
+
+gcp-createcluster: check pull-installer
+	$(eval INSTALLER_PARAMS := ${INSTALLER_PARAMS} \
+	  -e GOOGLE_CREDENTIALS=/tmp/.gcp/credentials \
+	  -e BASE_DOMAIN=${GCE_BASE_DOMAIN} \
+	  -v $(shell pwd)/.gcp/credentials:/tmp/.gcp/credentials${MOUNT_FLAGS})
 	${PODMAN_RUN} ${INSTALLER_PARAMS} -ti ${INSTALLER_IMAGE} \
 	  create cluster ${LOG_LEVEL_ARGS} --dir /output
+gcp-createcluster: TEMPLATE?=templates/gcp.yaml.j2
+
+gcp: check pull-installer gcp-createmanifests gcp-createcluster ## Create GCP cluster
 gcp: TEMPLATE?=templates/gcp.yaml.j2
 
 vsphere: check pull-installer ## Create vSphere cluster
