@@ -212,7 +212,7 @@ destroy-vsphere-upi: ## Destroy vsphere cluster
 	make cleanup
 	git clean tf/ -fx
 
-destroy-aws: ## Destroy AWS cluster
+destroy-aws: pull-installer ## Destroy AWS cluster
 	${PODMAN_RUN} ${INSTALLER_PARAMS} \
 	  -e AWS_SHARED_CREDENTIALS_FILE=/tmp/.aws/credentials \
 	  -v $(shell pwd)/.aws/credentials:/tmp/.aws/credentials${MOUNT_FLAGS} \
