@@ -28,8 +28,8 @@ LOG_LEVEL_ARGS=--log-level ${LOG_LEVEL}
 
 VERSION=4.20
 TERRAFORM_IMAGE=hashicorp/terraform:0.11.13
-INSTALLER_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:installer
-CLI_IMAGE=registry.ci.openshift.org/${TYPE}/${VERSION}:cli
+INSTALLER_IMAGE=quay.io/openshift/origin-installer:${VERSION}
+CLI_IMAGE=quay.io/openshift/origin-cli:${VERSION}
 YQ=yq
 LATEST_RELEASE=1
 ifneq ("$(LATEST_RELEASE)","")
