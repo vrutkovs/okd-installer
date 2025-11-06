@@ -6,6 +6,7 @@ LIBVIRT_BASE_DOMAIN=tt.testing
 MOUNT_FLAGS=:z
 INSTALLER_PARAMS=
 MANIFESTS=
+CLUSTER=ocp
 TYPE=ocp
 PULL_SECRET=pull_secrets/pull_secret.json
 SSH_PUBLICKEY=./ssh-publickey
@@ -51,9 +52,6 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 check: ## Verify all necessary files exist
-ifndef CLUSTER
-CLUSTER := ${USERNAME}
-endif
 ifeq (,$(wildcard ./${PULL_SECRET}))
 	$(error "${PULL_SECRET} not found!")
 endif
