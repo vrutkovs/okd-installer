@@ -1,7 +1,7 @@
 .EXPORT_ALL_VARIABLES:
 .DEFAULT_GOAL := help
 AWS_BASE_DOMAIN=devcluster.openshift.com
-GCE_BASE_DOMAIN=openshift.vrutkovs.eu
+GCE_BASE_DOMAIN=cloud.vrutkovs.eu
 LIBVIRT_BASE_DOMAIN=tt.testing
 MOUNT_FLAGS=:z
 INSTALLER_PARAMS=
